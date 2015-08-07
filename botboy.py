@@ -207,7 +207,7 @@ while not done:
     active_sprite_list.update()
     current_stage.update()
     if player.rect.right >= 500:
-        # diff = player.rect.right - 500
+        diff = player.rect.right - 500
         player.rect.right = 500
         current_stage.shift_world(-diff)
     if player.rect.left <= 120:
