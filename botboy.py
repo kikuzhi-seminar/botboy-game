@@ -48,6 +48,10 @@ class Player(pygame.sprite.Sprite):
         for item in item_hit_list:
             self.score += 1
             print(self.score)
+        enemy_hit_list = pygame.sprite.spritecollide(self, self.stage.enemy_list ,True)
+        for enemy in enemy_hit_list:
+            global gameover
+            gameover = True
 
 
     def calc_grav(self):
@@ -92,6 +96,31 @@ class Botboy(Player):
     def go_right(self):
         super().go_right()
         self.image = right_botboy_image
+
+class Mob(pygame.sprite.Sprite):
+    def __init__(self,x_pos, y_pos, width, height):
+        super().__init__()
+        self.image = pygame.Surface([width, height])
+        self.image.fill(RED)
+        self.rect = self.image.get_rect()
+        self.change_x = 0
+        self.change_y = 0
+        self.stage = None
+        self.rect.x = x_pos
+        self.rect.y = y_pos
+
+    def update(self):
+        #self.rect.x -= 3
+        pass
+
+    def move(self):
+        pass
+
+class Easy_mob(Mob):
+    def __init__(self,width,height):
+        super().__init__(width,height)
+    def move(self):
+        self.rect.x -= 3
 
 
 class StageObject(pygame.sprite.Sprite):
@@ -174,6 +203,8 @@ class Stage_01(Stage):
         self.item_list.add(coin)
         block = Block(500,400)
         self.stage_block_list.add(block)
+        mobA = Mob(600,300 , 50 ,50)
+        self.enemy_list.add(mobA)
 
 
 
