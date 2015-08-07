@@ -1,1 +1,2 @@
 # botboy-game
+こんにちは
