@@ -1,4 +1,7 @@
 import pygame
+import pygame.locals
+import pygame.font
+import sys
 
 BLACK = (0, 0, 0)
 WHITE = (255, 255, 255)
@@ -45,9 +48,13 @@ class Player(pygame.sprite.Sprite):
             self.change_y = 1
         else:
             self.change_y += .35
-        if self.rect.y >= SCREEN_HEIGHT - self.rect.height and self.change_y >= 0:
+        # if self.rect.y >= SCREEN_HEIGHT - self.rect.height and self.change_y >= 0:
+        #     self.change_y = 0
+        #     self.rect.y = SCREEN_HEIGHT - self.rect.height
+        if self.rect.y >= SCREEN_HEIGHT + self.rect.height and self.change_y >= 0:
             self.change_y = 0
-            self.rect.y = SCREEN_HEIGHT - self.rect.height
+            self.rect.y = SCREEN_HEIGHT + self.rect.height*2
+
 
     def jump(self):
         self.rect.y += 2
@@ -64,6 +71,22 @@ class Player(pygame.sprite.Sprite):
 
     def stop(self):
         self.change_x = 0
+class Botboy(Player):
+    def __init__(self):
+        pygame.sprite.Sprite.__init__(self)
+        self.image = right_botboy_image
+        self.rect = self.image.get_rect()
+        self.rect = self.image.get_rect()
+        self.change_x = 0
+        self.change_y = 0
+        self.stage = None
+    def go_left(self):
+        super().go_left()
+        self.image = left_botboy_image
+
+    def go_right(self):
+        super().go_right()
+        self.image = right_botboy_image
 
 
 class StageObject(pygame.sprite.Sprite):
@@ -89,7 +112,7 @@ class Stage():
         self.enemy_list.update()
 
     def draw(self, screen):
-        screen.fill(BLUE)
+        screen.fill(WHITE)
         self.platform_list.draw(screen)
         self.enemy_list.draw(screen)
 
@@ -105,7 +128,8 @@ class Stage_01(Stage):
     def __init__(self, player):
         Stage.__init__(self, player)
         self.level_limit = -1000
-        level = [[210, 70, 500, 500],
+        level = [[1210, 70, 0, 590],
+                 [210, 70, 500, 500],
                  [210, 70, 800, 400],
                  [210, 70, 1000, 500],
                  [210, 70, 1120, 280],
@@ -170,10 +194,21 @@ class Stage_04(Stage):
 
 
 pygame.init()
+font = pygame.font.Font(None, 36)
 size = [SCREEN_WIDTH, SCREEN_HEIGHT]
 screen = pygame.display.set_mode(size)
-pygame.display.set_caption("Side-scrolling Platformer")
-player = Player()
+pygame.display.set_caption("BotBoy")
+left_botboy_image = pygame.image.load("data/python.png")
+left_botboy_image.set_colorkey(-1,pygame.RLEACCEL)
+right_botboy_image = pygame.transform.flip(left_botboy_image,True,False)
+
+try:
+    if sys.argv[1] == "player":
+        player = Player()
+    else:
+        player = Botboy()
+except IndexError:
+    player = Botboy()
 stage_list = []
 stage_list.append(Stage_01(player))
 stage_list.append(Stage_02(player))
@@ -221,8 +256,24 @@ while not done:
             current_stage_no += 1
             current_stage = stage_list[current_stage_no]
             player.stage = current_stage
+    if player.rect.y >= SCREEN_HEIGHT + player.rect.height and player.change_y >= 0:
+        done=True
     current_stage.draw(screen)
     active_sprite_list.draw(screen)
+    clock.tick(60)
+    pygame.display.flip()
+screen.fill(BLACK)
+done = False
+print(done)
+while not done:
+    for event in pygame.event.get():
+         if event.type == pygame.QUIT:
+            done = True
+    text = font.render("Game Over", True, WHITE)
+    text_rect = text.get_rect()
+    text_x = screen.get_width() / 2 - text_rect.width / 2
+    text_y = screen.get_height() / 2 - text_rect.height / 2
+    screen.blit(text, [text_x, text_y])
     clock.tick(60)
     pygame.display.flip()
 pygame.quit()
