@@ -8,6 +8,7 @@ WHITE = (255, 255, 255)
 BLUE = (0, 0, 255)
 RED = (255, 0, 0)
 GREEN = (0, 255, 0)
+YELLOW = (255, 255, 0)
 
 SCREEN_WIDTH = 800
 SCREEN_HEIGHT = 600
@@ -24,33 +25,36 @@ class Player(pygame.sprite.Sprite):
         self.change_x = 0
         self.change_y = 0
         self.stage = None
+        self.score = 0
 
     def update(self):
         self.calc_grav()
         self.rect.x += self.change_x
-        block_hit_list = pygame.sprite.spritecollide(self, self.stage.platform_list, False)
+        block_hit_list = pygame.sprite.spritecollide(self, self.stage.stage_block_list, False)
         for block in block_hit_list:
             if self.change_x > 0:
                 self.rect.right = block.rect.left
             elif self.change_x < 0:
                 self.rect.left = block.rect.right
         self.rect.y += self.change_y
-        block_hit_list = pygame.sprite.spritecollide(self, self.stage.platform_list, False)
+        block_hit_list = pygame.sprite.spritecollide(self, self.stage.stage_block_list, False)
         for block in block_hit_list:
             if self.change_y > 0:
                 self.rect.bottom = block.rect.top
             elif self.change_y < 0:
                 self.rect.top = block.rect.bottom
             self.change_y = 0
+        item_hit_list = pygame.sprite.spritecollide(self, self.stage.item_list,True)
+        for item in item_hit_list:
+            self.score += 1
+            print(self.score)
+
 
     def calc_grav(self):
         if self.change_y == 0:
             self.change_y = 1
         else:
             self.change_y += .35
-        # if self.rect.y >= SCREEN_HEIGHT - self.rect.height and self.change_y >= 0:
-        #     self.change_y = 0
-        #     self.rect.y = SCREEN_HEIGHT - self.rect.height
         if self.rect.y >= SCREEN_HEIGHT + self.rect.height and self.change_y >= 0:
             self.change_y = 0
             self.rect.y = SCREEN_HEIGHT + self.rect.height*2
@@ -58,7 +62,7 @@ class Player(pygame.sprite.Sprite):
 
     def jump(self):
         self.rect.y += 2
-        platform_hit_list = pygame.sprite.spritecollide(self, self.stage.platform_list, False)
+        platform_hit_list = pygame.sprite.spritecollide(self, self.stage.stage_block_list, False)
         self.rect.y -= 2
         if len(platform_hit_list) > 0 or self.rect.bottom >= SCREEN_HEIGHT:
             self.change_y = -10
@@ -80,6 +84,7 @@ class Botboy(Player):
         self.change_x = 0
         self.change_y = 0
         self.stage = None
+        self.score = 0
     def go_left(self):
         super().go_left()
         self.image = left_botboy_image
@@ -96,32 +101,55 @@ class StageObject(pygame.sprite.Sprite):
         self.image.fill(GREEN)
         self.rect = self.image.get_rect()
 
+class Coin(StageObject):
+    def __init__(self, x_pos ,y_pos):
+        pygame.sprite.Sprite.__init__(self)
+        self.image = pygame.Surface([50,50])
+        self.image.fill(WHITE)
+        pygame.draw.circle(self.image, YELLOW, (10, 10), 10, 0)
+        self.rect = self.image.get_rect()
+        self.rect.center = (x_pos,y_pos)
+
+class Block(StageObject):
+    def __init__(self,x_pos,y_pos):
+        pygame.sprite.Sprite.__init__(self)
+        self.image = pygame.Surface([50,50])
+        self.image.fill(WHITE)
+        pygame.draw.rect(self.image, GREEN, (0,0,25,25), 0)
+        self.rect = self.image.get_rect()
+        self.rect.x = x_pos
+        self.rect.y = y_pos
 
 class Stage():
-    platform_list = None
+    stage_block_list = None
     enemy_list = None
     world_shift = 0
 
     def __init__(self, player):
-        self.platform_list = pygame.sprite.Group()
+        self.stage_block_list = pygame.sprite.Group()
         self.enemy_list = pygame.sprite.Group()
+        self.item_list = pygame.sprite.Group()
         self.player = player
 
     def update(self):
-        self.platform_list.update()
+        self.stage_block_list.update()
         self.enemy_list.update()
+        self.item_list.update()
 
     def draw(self, screen):
         screen.fill(WHITE)
-        self.platform_list.draw(screen)
+        self.stage_block_list.draw(screen)
         self.enemy_list.draw(screen)
+        self.item_list.draw(screen)
 
     def shift_world(self, shift_x):
         self.world_shift += shift_x
-        for platform in self.platform_list:
+        for platform in self.stage_block_list:
             platform.rect.x += shift_x
         for enemy in self.enemy_list:
             enemy.rect.x += shift_x
+        for item in self.item_list:
+            item.rect.x += shift_x
 
 
 class Stage_01(Stage):
@@ -139,7 +167,12 @@ class Stage_01(Stage):
             block.rect.x = platform[2]
             block.rect.y = platform[3]
             block.player = self.player
-            self.platform_list.add(block)
+            self.stage_block_list.add(block)
+        coin = Coin(400,400)
+        self.item_list.add(coin)
+        block = Block(500,400)
+        self.stage_block_list.add(block)
+
 
 
 class Stage_02(Stage):
@@ -156,8 +189,7 @@ class Stage_02(Stage):
             block.rect.x = platform[2]
             block.rect.y = platform[3]
             block.player = self.player
-            self.platform_list.add(block)
-
+            self.stage_block_list.add(block)
 
 class Stage_03(Stage):
     def __init__(self, player):
@@ -173,7 +205,7 @@ class Stage_03(Stage):
             block.rect.x = platform[2]
             block.rect.y = platform[3]
             block.player = self.player
-            self.platform_list.add(block)
+            self.stage_block_list.add(block)
 
 
 class Stage_04(Stage):
@@ -190,7 +222,7 @@ class Stage_04(Stage):
             block.rect.x = platform[2]
             block.rect.y = platform[3]
             block.player = self.player
-            self.platform_list.add(block)
+            self.stage_block_list.add(block)
 
 
 pygame.init()
