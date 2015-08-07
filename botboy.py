@@ -130,6 +130,7 @@ class Stage():
         self.enemy_list = pygame.sprite.Group()
         self.item_list = pygame.sprite.Group()
         self.player = player
+        self.break_points = None
 
     def update(self):
         self.stage_block_list.update()
@@ -144,8 +145,8 @@ class Stage():
 
     def shift_world(self, shift_x):
         self.world_shift += shift_x
-        for platform in self.stage_block_list:
-            platform.rect.x += shift_x
+        for stage in self.stage_block_list:
+            stage.rect.x += shift_x
         for enemy in self.enemy_list:
             enemy.rect.x += shift_x
         for item in self.item_list:
@@ -155,6 +156,7 @@ class Stage():
 class Stage_01(Stage):
     def __init__(self, player):
         Stage.__init__(self, player)
+        self.break_points = [0, 300, 600 ,900]
         self.level_limit = -1000
         level = [[1210, 70, 0, 590],
                  [210, 70, 500, 500],
@@ -254,58 +256,65 @@ player.rect.x = 340
 player.rect.y = SCREEN_HEIGHT - player.rect.height
 active_sprite_list.add(player)
 done = False
+gameover = False
 clock = pygame.time.Clock()
 while not done:
-    for event in pygame.event.get():
-        if event.type == pygame.QUIT:
-            done = True
-        if event.type == pygame.KEYDOWN:
-            if event.key == pygame.K_LEFT:
-                player.go_left()
-            if event.key == pygame.K_RIGHT:
-                player.go_right()
-            if event.key == pygame.K_UP:
-                player.jump()
-        if event.type == pygame.KEYUP:
-            if event.key == pygame.K_LEFT and player.change_x < 0:
-                player.stop()
-            if event.key == pygame.K_RIGHT and player.change_x > 0:
-                player.stop()
-    active_sprite_list.update()
-    current_stage.update()
-    if player.rect.right >= 500:
-        diff = player.rect.right - 500
-        player.rect.right = 500
-        current_stage.shift_world(-diff)
-    if player.rect.left <= 120:
-        diff = 120 - player.rect.left
-        player.rect.left = 120
-        current_stage.shift_world(diff)
-    current_position = player.rect.x + current_stage.world_shift
-    if current_position < current_stage.level_limit:
-        player.rect.x = 120
-        if current_stage_no < len(stage_list) - 1:
-            current_stage_no += 1
-            current_stage = stage_list[current_stage_no]
-            player.stage = current_stage
-    if player.rect.y >= SCREEN_HEIGHT + player.rect.height and player.change_y >= 0:
-        done=True
-    current_stage.draw(screen)
-    active_sprite_list.draw(screen)
-    clock.tick(60)
-    pygame.display.flip()
-screen.fill(BLACK)
-done = False
-print(done)
-while not done:
-    for event in pygame.event.get():
-         if event.type == pygame.QUIT:
-            done = True
-    text = font.render("Game Over", True, WHITE)
-    text_rect = text.get_rect()
-    text_x = screen.get_width() / 2 - text_rect.width / 2
-    text_y = screen.get_height() / 2 - text_rect.height / 2
-    screen.blit(text, [text_x, text_y])
+    if not gameover:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                done = True
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_LEFT:
+                    player.go_left()
+                if event.key == pygame.K_RIGHT:
+                    player.go_right()
+                if event.key == pygame.K_UP:
+                    player.jump()
+            if event.type == pygame.KEYUP:
+                if event.key == pygame.K_LEFT and player.change_x < 0:
+                    player.stop()
+                if event.key == pygame.K_RIGHT and player.change_x > 0:
+                    player.stop()
+        active_sprite_list.update()
+        current_stage.update()
+        if player.rect.right >= 500:
+            diff = player.rect.right - 500
+            player.rect.right = 500
+            current_stage.shift_world(-diff)
+        if player.rect.left <= 120:
+            diff = 120 - player.rect.left
+            player.rect.left = 120
+            current_stage.shift_world(diff)
+        current_position = player.rect.x + current_stage.world_shift
+        if current_position < current_stage.level_limit:
+            player.rect.x = 120
+            if current_stage_no < len(stage_list) - 1:
+                current_stage_no += 1
+                current_stage = stage_list[current_stage_no]
+                player.stage = current_stage
+        if player.rect.y >= SCREEN_HEIGHT + player.rect.height and player.change_y >= 0:
+            gameover=True
+        current_stage.draw(screen)
+        active_sprite_list.draw(screen)
+    else:
+         screen.fill(BLACK)
+         for event in pygame.event.get():
+             if event.type == pygame.QUIT:
+                 done = True
+             elif event.type == pygame.KEYDOWN and event.key == pygame.K_RETURN:
+                 gameover = False
+                 player.rect.y = 0
+
+         text = font.render("Game Over", True, WHITE)
+         text_rect = text.get_rect()
+         text_x = screen.get_width() / 2 - text_rect.width / 2
+         text_y = screen.get_height() / 2 - text_rect.height / 2
+         screen.blit(text, [text_x, text_y])
+         text = font.render("Press Enter to Continue!", True, WHITE)
+         text_rect = text.get_rect()
+         text_x = screen.get_width() / 2 - text_rect.width / 2
+         text_y = screen.get_height() / 2 - text_rect.height / 2 + 50
+         screen.blit(text, [text_x, text_y])
     clock.tick(60)
     pygame.display.flip()
 pygame.quit()
