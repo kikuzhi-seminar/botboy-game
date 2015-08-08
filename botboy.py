@@ -48,10 +48,16 @@ class Player(pygame.sprite.Sprite):
         for item in item_hit_list:
             self.score += 1
             print(self.score)
-        enemy_hit_list = pygame.sprite.spritecollide(self, self.stage.enemy_list ,True)
+        enemy_hit_list = pygame.sprite.spritecollide(self, self.stage.enemy_list, False)
         for enemy in enemy_hit_list:
             global gameover
-            gameover = True
+            print("enemy:"+ str(enemy.rect.y))
+            print("playover:" + str(player.rect.y + player.rect.height))
+            if enemy.rect.y >= player.rect.y + player.rect.height - player.change_y:
+                enemy.kill()
+            else:
+                gameover = True
+
 
 
     def calc_grav(self):
@@ -110,7 +116,7 @@ class Mob(pygame.sprite.Sprite):
         self.rect.y = y_pos
 
     def update(self):
-        #self.rect.x -= 3
+        # self.rect.x -= 3
         pass
 
     def move(self):
@@ -133,18 +139,19 @@ class StageObject(pygame.sprite.Sprite):
 class Coin(StageObject):
     def __init__(self, x_pos ,y_pos):
         pygame.sprite.Sprite.__init__(self)
-        self.image = pygame.Surface([50,50])
+        self.image = pygame.Surface([20,20])
         self.image.fill(WHITE)
         pygame.draw.circle(self.image, YELLOW, (10, 10), 10, 0)
+        self.image.set_colorkey(self.image.get_at((0,0)), pygame.RLEACCEL)
         self.rect = self.image.get_rect()
         self.rect.center = (x_pos,y_pos)
 
 class Block(StageObject):
     def __init__(self,x_pos,y_pos):
         pygame.sprite.Sprite.__init__(self)
-        self.image = pygame.Surface([50,50])
+        self.image = pygame.Surface([30,30])
         self.image.fill(WHITE)
-        pygame.draw.rect(self.image, GREEN, (0,0,25,25), 0)
+        pygame.draw.rect(self.image, GREEN, (0,0,30,30), 0)
         self.rect = self.image.get_rect()
         self.rect.x = x_pos
         self.rect.y = y_pos
@@ -160,6 +167,7 @@ class Stage():
         self.item_list = pygame.sprite.Group()
         self.player = player
         self.break_points = None
+        self.BLOCKSIZE = 30
 
     def update(self):
         self.stage_block_list.update()
@@ -181,30 +189,38 @@ class Stage():
         for item in self.item_list:
             item.rect.x += shift_x
 
+    def stageBuilder(self,filename,player):
+        map = []
+        with open(filename, "r") as file:
+            for line in file:
+                line = line.rstrip()
+                map.append(list(line))
+                self.row = len(map)
+        map.reverse()
+        self.row = len(map)
+        self.col = len(map[0])
+        self.width = self.col * self.BLOCKSIZE
+        self.height = self.row * self.BLOCKSIZE
+
+        for i in range(self.row):
+            for j in range(self.col):
+                if map[i][j] == 'B':
+                    block = Block(j*self.BLOCKSIZE,SCREEN_HEIGHT - i*self.BLOCKSIZE)
+                    block.player = player
+                    self.stage_block_list.add(block)
+                elif map[i][j] == 'c':
+                    coin = Coin(j*self.BLOCKSIZE,SCREEN_HEIGHT- i*self.BLOCKSIZE)
+                    self.item_list.add(coin)
+                elif map[i][j] == 'm':
+                    mob = Mob(j*self.BLOCKSIZE,SCREEN_HEIGHT - i*self.BLOCKSIZE ,30 ,30)
+                    self.enemy_list.add(mob)
+
 
 class Stage_01(Stage):
     def __init__(self, player):
-        Stage.__init__(self, player)
-        self.break_points = [0, 300, 600 ,900]
+        super().__init__(self)
         self.level_limit = -1000
-        level = [[1210, 70, 0, 590],
-                 [210, 70, 500, 500],
-                 [210, 70, 800, 400],
-                 [210, 70, 1000, 500],
-                 [210, 70, 1120, 280],
-                 ]
-        for platform in level:
-            block = StageObject(platform[0], platform[1])
-            block.rect.x = platform[2]
-            block.rect.y = platform[3]
-            block.player = self.player
-            self.stage_block_list.add(block)
-        coin = Coin(400,400)
-        self.item_list.add(coin)
-        block = Block(500,400)
-        self.stage_block_list.add(block)
-        mobA = Mob(600,300 , 50 ,50)
-        self.enemy_list.add(mobA)
+        self.stageBuilder("data/stage_01.pymap",self.player)
 
 
 
@@ -223,6 +239,7 @@ class Stage_02(Stage):
             block.rect.y = platform[3]
             block.player = self.player
             self.stage_block_list.add(block)
+
 
 class Stage_03(Stage):
     def __init__(self, player):
@@ -244,7 +261,7 @@ class Stage_03(Stage):
 class Stage_04(Stage):
     def __init__(self, player):
         Stage.__init__(self, player)
-        self.level_limit = -1000
+        self.stage_limit = -1000
         level = [[210, 30, 450, 570],
                  [210, 30, 850, 420],
                  [210, 30, 1000, 520],
@@ -327,6 +344,11 @@ while not done:
             gameover=True
         current_stage.draw(screen)
         active_sprite_list.draw(screen)
+        text = font.render("Total Credit: " + str(player.score), True, BLACK)
+        text_rect = text.get_rect()
+        text_x = screen.get_width() - text_rect.width * 1.2
+        text_y = 20
+        screen.blit(text, [text_x, text_y])
     else:
          screen.fill(BLACK)
          for event in pygame.event.get():
