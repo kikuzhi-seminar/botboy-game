@@ -144,7 +144,7 @@ class Coin(StageObject):
         pygame.draw.circle(self.image, YELLOW, (10, 10), 10, 0)
         self.image.set_colorkey(self.image.get_at((0,0)), pygame.RLEACCEL)
         self.rect = self.image.get_rect()
-        self.rect.center = (x_pos,y_pos)
+        self.rect.center = (x_pos + 15,y_pos +15)
 
 class Block(StageObject):
     def __init__(self,x_pos,y_pos):
@@ -199,9 +199,9 @@ class Stage():
         map.reverse()
         self.row = len(map)
         self.col = len(map[0])
+        self.level_limit = -1 * (self.col -1) * self.BLOCKSIZE
         self.width = self.col * self.BLOCKSIZE
         self.height = self.row * self.BLOCKSIZE
-
         for i in range(self.row):
             for j in range(self.col):
                 if map[i][j] == 'B':
@@ -219,7 +219,7 @@ class Stage():
 class Stage_01(Stage):
     def __init__(self, player):
         super().__init__(self)
-        self.level_limit = -1000
+        #self.level_limit = -1000
         self.stageBuilder("data/stage_01.pymap",self.player)
 
 
