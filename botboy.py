@@ -15,10 +15,11 @@ SCREEN_HEIGHT = 600
 
 
 class Player(pygame.sprite.Sprite):
-    def __init__(self):
+    def __init__(self,game):
         super().__init__()
         width = 40
         height = 60
+        self.game = game
         self.image = pygame.Surface([width, height])
         self.image.fill(RED)
         self.rect = self.image.get_rect()
@@ -50,13 +51,13 @@ class Player(pygame.sprite.Sprite):
             print(self.score)
         enemy_hit_list = pygame.sprite.spritecollide(self, self.stage.enemy_list, False)
         for enemy in enemy_hit_list:
-            global gameover
+            # global gameover
             print("enemy:"+ str(enemy.rect.y))
-            print("playover:" + str(player.rect.y + player.rect.height))
-            if enemy.rect.y >= player.rect.y + player.rect.height - player.change_y:
+            print("playover:" + str(self.game.player.rect.y + self.game.player.rect.height))
+            if enemy.rect.y >= self.game.player.rect.y + self.game.player.rect.height - self.game.player.change_y:
                 enemy.kill()
             else:
-                gameover = True
+                self.game.gameover = True
 
 
 
@@ -85,10 +86,16 @@ class Player(pygame.sprite.Sprite):
 
     def stop(self):
         self.change_x = 0
+
+
 class Botboy(Player):
-    def __init__(self):
+    def __init__(self,game):
         pygame.sprite.Sprite.__init__(self)
-        self.image = right_botboy_image
+        self.game = game
+        self.left_botboy_image = pygame.image.load("data/python.png")
+        self.left_botboy_image.set_colorkey(-1,pygame.RLEACCEL)
+        self.right_botboy_image = pygame.transform.flip(self.left_botboy_image,True,False)
+        self.image = self.right_botboy_image
         self.rect = self.image.get_rect()
         self.rect = self.image.get_rect()
         self.change_x = 0
@@ -97,11 +104,11 @@ class Botboy(Player):
         self.score = 0
     def go_left(self):
         super().go_left()
-        self.image = left_botboy_image
+        self.image = self.left_botboy_image
 
     def go_right(self):
         super().go_right()
-        self.image = right_botboy_image
+        self.image = self.right_botboy_image
 
 class Mob(pygame.sprite.Sprite):
     def __init__(self,x_pos, y_pos, width, height):
@@ -275,99 +282,110 @@ class Stage_04(Stage):
             self.stage_block_list.add(block)
 
 
-pygame.init()
-font = pygame.font.Font(None, 36)
-size = [SCREEN_WIDTH, SCREEN_HEIGHT]
-screen = pygame.display.set_mode(size)
-pygame.display.set_caption("BotBoy")
-left_botboy_image = pygame.image.load("data/python.png")
-left_botboy_image.set_colorkey(-1,pygame.RLEACCEL)
-right_botboy_image = pygame.transform.flip(left_botboy_image,True,False)
+class BotboyGame:
+    def __init__(self):
+        # pygameの初期設定
+        pygame.init()
+        pygame.display.set_caption("BotBoy")
+        self.font = pygame.font.Font(None, 36)
+        self.size = [SCREEN_WIDTH, SCREEN_HEIGHT]
+        self.screen = pygame.display.set_mode(self.size)
 
-try:
-    if sys.argv[1] == "player":
-        player = Player()
-    else:
-        player = Botboy()
-except IndexError:
-    player = Botboy()
-stage_list = []
-stage_list.append(Stage_01(player))
-stage_list.append(Stage_02(player))
-stage_list.append(Stage_03(player))
-stage_list.append(Stage_04(player))
-current_stage_no = 0
-current_stage = stage_list[current_stage_no]
-active_sprite_list = pygame.sprite.Group()
-player.stage = current_stage
-player.rect.x = 340
-player.rect.y = SCREEN_HEIGHT - player.rect.height
-active_sprite_list.add(player)
-done = False
-gameover = False
-clock = pygame.time.Clock()
-while not done:
-    if not gameover:
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                done = True
-            if event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_LEFT:
-                    player.go_left()
-                if event.key == pygame.K_RIGHT:
-                    player.go_right()
-                if event.key == pygame.K_UP:
-                    player.jump()
-            if event.type == pygame.KEYUP:
-                if event.key == pygame.K_LEFT and player.change_x < 0:
-                    player.stop()
-                if event.key == pygame.K_RIGHT and player.change_x > 0:
-                    player.stop()
-        active_sprite_list.update()
-        current_stage.update()
-        if player.rect.right >= 500:
-            diff = player.rect.right - 500
-            player.rect.right = 500
-            current_stage.shift_world(-diff)
-        if player.rect.left <= 120:
-            diff = 120 - player.rect.left
-            player.rect.left = 120
-            current_stage.shift_world(diff)
-        current_position = player.rect.x + current_stage.world_shift
-        if current_position < current_stage.level_limit:
-            player.rect.x = 120
-            if current_stage_no < len(stage_list) - 1:
-                current_stage_no += 1
-                current_stage = stage_list[current_stage_no]
-                player.stage = current_stage
-        if player.rect.y >= SCREEN_HEIGHT + player.rect.height and player.change_y >= 0:
-            gameover=True
-        current_stage.draw(screen)
-        active_sprite_list.draw(screen)
-        text = font.render("Total Credit: " + str(player.score), True, BLACK)
-        text_rect = text.get_rect()
-        text_x = screen.get_width() - text_rect.width * 1.2
-        text_y = 20
-        screen.blit(text, [text_x, text_y])
-    else:
-         screen.fill(BLACK)
-         for event in pygame.event.get():
-             if event.type == pygame.QUIT:
-                 done = True
-             elif event.type == pygame.KEYDOWN and event.key == pygame.K_RETURN:
-                 gameover = False
-                 player.rect.y = 0
+        # ゲームキャラクター
+        self.choseChar()
 
-         text = font.render("Game Over", True, WHITE)
-         text_rect = text.get_rect()
-         text_x = screen.get_width() / 2 - text_rect.width / 2
-         text_y = screen.get_height() / 2 - text_rect.height / 2
-         screen.blit(text, [text_x, text_y])
-         text = font.render("Press Enter to Continue!", True, WHITE)
-         text_rect = text.get_rect()
-         text_x = screen.get_width() / 2 - text_rect.width / 2
-         text_y = screen.get_height() / 2 - text_rect.height / 2 + 50
-         screen.blit(text, [text_x, text_y])
-    clock.tick(60)
-    pygame.display.flip()
+        # ステージ作成
+        self.stage_list = []
+        self.stage_list.append(Stage_01(self.player))
+        self.stage_list.append(Stage_02(self.player))
+        self.stage_list.append(Stage_03(self.player))
+        self.stage_list.append(Stage_04(self.player))
+        self.current_stage_no = 0
+        self.current_stage = self.stage_list[self.current_stage_no]
+
+        # クラス内のオブジェクトをリンクさせている。
+        self.active_sprite_list = pygame.sprite.Group()
+        self.player.stage = self.current_stage
+        self.player.rect.x = 340
+        self.player.rect.y = SCREEN_HEIGHT - self.player.rect.height
+        self.active_sprite_list.add(self.player)
+
+        # ゲームの用意
+        self.done = False
+        self.gameover = False
+        self.clock = pygame.time.Clock()
+
+        # メインループ
+        while not self.done:
+            if not self.gameover:
+                for event in pygame.event.get():
+                    if event.type == pygame.QUIT:
+                        done = True
+                    if event.type == pygame.KEYDOWN:
+                        if event.key == pygame.K_LEFT:
+                            self.player.go_left()
+                        if event.key == pygame.K_RIGHT:
+                            self.player.go_right()
+                        if event.key == pygame.K_UP:
+                            self.player.jump()
+                    if event.type == pygame.KEYUP:
+                        if event.key == pygame.K_LEFT and self.player.change_x < 0:
+                            self.player.stop()
+                        if event.key == pygame.K_RIGHT and self.player.change_x > 0:
+                            self.player.stop()
+                # update
+                self.active_sprite_list.update()
+                self.current_stage.update()
+                if self.player.rect.right >= 500:
+                    diff = self.player.rect.right - 500
+                    self.player.rect.right = 500
+                    self.current_stage.shift_world(-diff)
+                if self.player.rect.left <= 120:
+                    diff = 120 - self.player.rect.left
+                    self.player.rect.left = 120
+                    self.current_stage.shift_world(diff)
+                self.current_position = self.player.rect.x + self.current_stage.world_shift
+                if self.current_position < self.current_stage.level_limit:
+                    self.player.rect.x = 120
+                    if self.current_stage_no < len(stage_list) - 1:
+                        self.current_stage_no += 1
+                        self.current_stage = self.stage_list[current_stage_no]
+                        self.player.stage = self.current_stage
+                if self.player.rect.y >= SCREEN_HEIGHT + self.player.rect.height and self.player.change_y >= 0:
+                    self.gameover=True
+                # drow
+                self.current_stage.draw(self.screen)
+                self.active_sprite_list.draw(self.screen)
+                self.text = self.font.render("Total Credit: " + str(self.player.score), True, BLACK)
+                self.text_rect = self.text.get_rect()
+                self.text_x = self.screen.get_width() - self.text_rect.width * 1.2
+                self.text_y = 20
+                self.screen.blit(self.text, [self.text_x, self.text_y])
+            else:
+                 self.screen.fill(BLACK)
+                 for event in pygame.event.get():
+                     if event.type == pygame.QUIT:
+                         self.done = True
+                     elif event.type == pygame.KEYDOWN and event.key == pygame.K_RETURN:
+                         self.gameover = False
+                         self.player.rect.y = 0
+
+                 self.text = self.font.render("Game Over", True, WHITE)
+                 self.text_rect = self.text.get_rect()
+                 self.text_x = self.screen.get_width() / 2 - self.text_rect.width / 2
+                 self.text_y = self.screen.get_height() / 2 - self.text_rect.height / 2
+                 self.screen.blit(self.text, [self.text_x, self.text_y])
+                 self.text = self.font.render("Press Enter to Continue!", True, WHITE)
+                 self.text_rect = self.text.get_rect()
+                 self.text_x = self.screen.get_width() / 2 - self.text_rect.width / 2
+                 self.text_y = self.screen.get_height() / 2 - self.text_rect.height / 2 + 50
+                 self.screen.blit(self.text, [self.text_x, self.text_y])
+            self.clock.tick(60)
+            pygame.display.flip()
+
+    # キャラ選択
+    def choseChar(self):
+        self.player = Botboy(self)
+
+BotboyGame()
 pygame.quit()
