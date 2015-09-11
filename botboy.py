@@ -315,12 +315,13 @@ class BotboyGame:
         self.gameover = False
         self.clock = pygame.time.Clock()
 
-        # メインループ
+    # メインループ
+    def main(self):
         while not self.done:
             if not self.gameover:
                 for event in pygame.event.get():
                     if event.type == pygame.QUIT:
-                        done = True
+                        self.done = True
                     if event.type == pygame.KEYDOWN:
                         if event.key == pygame.K_LEFT:
                             self.player.go_left()
@@ -333,34 +334,8 @@ class BotboyGame:
                             self.player.stop()
                         if event.key == pygame.K_RIGHT and self.player.change_x > 0:
                             self.player.stop()
-                # update
-                self.active_sprite_list.update()
-                self.current_stage.update()
-                if self.player.rect.right >= 500:
-                    diff = self.player.rect.right - 500
-                    self.player.rect.right = 500
-                    self.current_stage.shift_world(-diff)
-                if self.player.rect.left <= 120:
-                    diff = 120 - self.player.rect.left
-                    self.player.rect.left = 120
-                    self.current_stage.shift_world(diff)
-                self.current_position = self.player.rect.x + self.current_stage.world_shift
-                if self.current_position < self.current_stage.level_limit:
-                    self.player.rect.x = 120
-                    if self.current_stage_no < len(stage_list) - 1:
-                        self.current_stage_no += 1
-                        self.current_stage = self.stage_list[current_stage_no]
-                        self.player.stage = self.current_stage
-                if self.player.rect.y >= SCREEN_HEIGHT + self.player.rect.height and self.player.change_y >= 0:
-                    self.gameover=True
-                # drow
-                self.current_stage.draw(self.screen)
-                self.active_sprite_list.draw(self.screen)
-                self.text = self.font.render("Total Credit: " + str(self.player.score), True, BLACK)
-                self.text_rect = self.text.get_rect()
-                self.text_x = self.screen.get_width() - self.text_rect.width * 1.2
-                self.text_y = 20
-                self.screen.blit(self.text, [self.text_x, self.text_y])
+                self.update()
+                self.drow()
             else:
                  self.screen.fill(BLACK)
                  for event in pygame.event.get():
@@ -387,5 +362,36 @@ class BotboyGame:
     def choseChar(self):
         self.player = Botboy(self)
 
-BotboyGame()
+    def update(self):
+        self.active_sprite_list.update()
+        self.current_stage.update()
+        if self.player.rect.right >= 500:
+            diff = self.player.rect.right - 500
+            self.player.rect.right = 500
+            self.current_stage.shift_world(-diff)
+        if self.player.rect.left <= 120:
+            diff = 120 - self.player.rect.left
+            self.player.rect.left = 120
+            self.current_stage.shift_world(diff)
+        self.current_position = self.player.rect.x + self.current_stage.world_shift
+        if self.current_position < self.current_stage.level_limit:
+            self.player.rect.x = 120
+            if self.current_stage_no < len(self.stage_list) - 1:
+                self.current_stage_no += 1
+                self.current_stage = self.stage_list[self.current_stage_no]
+                self.player.stage = self.current_stage
+        if self.player.rect.y >= SCREEN_HEIGHT + self.player.rect.height and self.player.change_y >= 0:
+            self.gameover=True
+    def drow(self):
+        self.current_stage.draw(self.screen)
+        self.active_sprite_list.draw(self.screen)
+        self.text = self.font.render("Total Credit: " + str(self.player.score), True, BLACK)
+        self.text_rect = self.text.get_rect()
+        self.text_x = self.screen.get_width() - self.text_rect.width * 1.2
+        self.text_y = 20
+        self.screen.blit(self.text, [self.text_x, self.text_y])
+
+
+game = BotboyGame()
+game.main()
 pygame.quit()
