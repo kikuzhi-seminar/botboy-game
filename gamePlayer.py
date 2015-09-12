@@ -1,5 +1,6 @@
 import pygame
 from util import *
+from gameStage import *
 
 class Player(pygame.sprite.Sprite):
     def __init__(self,game):
@@ -36,20 +37,20 @@ class Player(pygame.sprite.Sprite):
         for item in item_hit_list:
             self.score += 1
             print(self.score)
+        # 敵との判定の実装
         enemy_hit_list = pygame.sprite.spritecollide(self, self.stage.enemy_list, False)
         for enemy in enemy_hit_list:
             if enemy.rect.y >= self.game.player.rect.y + self.game.player.rect.height - self.game.player.change_y:
                 enemy.kill()
             else:
                 self.game.gameover = True
+        # Doorオブジェクトのワープの実装
         door_hit_list = pygame.sprite.spritecollide(self, self.stage.door_list, False)
-        if len(door_hit_list) > 0:
-            print("hit!")
+        if len(door_hit_list) > 0 and door_hit_list[0].check():
             self.rect.x = 120
-            if self.game.current_stage_no < len(self.game.stage_list) - 1:
-                self.game.current_stage_no += 1
-                self.game.current_stage = self.game.stage_list[self.game.current_stage_no]
-                self.stage = self.game.current_stage
+            self.game.current_stage = Stage(self, door_hit_list[0].nextStage())
+            self.stage.stage_block_list.empty()
+            self.stage = self.game.current_stage
 
     def calc_grav(self):
         if self.change_y == 0:

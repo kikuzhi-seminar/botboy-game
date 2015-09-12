@@ -20,13 +20,7 @@ class BotboyGame:
         self.choseChar()
 
         # ステージ作成
-        self.stage_list = []
-        self.stage_list.append(Stage_01(self.player))
-        self.stage_list.append(Stage_02(self.player))
-        self.stage_list.append(Stage_03(self.player))
-        self.stage_list.append(Stage_04(self.player))
-        self.current_stage_no = 0
-        self.current_stage = self.stage_list[self.current_stage_no]
+        self.current_stage = Stage(self.player,"01")
 
         # クラス内のオブジェクトをリンクさせている。
         self.active_sprite_list = pygame.sprite.Group()

@@ -29,7 +29,7 @@ class Block(StageObject):
         self.rect.y = y_pos
 
 class Door(StageObject):
-    def __init__(self,x_pos,y_pos):
+    def __init__(self, x_pos, y_pos, doorOpt):
         pygame.sprite.Sprite.__init__(self)
         self.image = pygame.Surface([30,30])
         self.image.fill(WHITE)
@@ -37,5 +37,10 @@ class Door(StageObject):
         self.rect = self.image.get_rect()
         self.rect.x = x_pos
         self.rect.y = y_pos
+        self.stageId = doorOpt[0]
+
     def check(self):
         return True
+
+    def nextStage(self):
+        return self.stageId

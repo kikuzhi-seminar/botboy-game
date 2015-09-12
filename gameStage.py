@@ -3,12 +3,8 @@ from util import *
 from gameStageObject import *
 
 class Stage():
-    stage_block_list = None
-    enemy_list = None
-    door_list = None
-    world_shift = 0
-
-    def __init__(self, player):
+    def __init__(self, player, stageId):
+        self.world_shift = 0
         self.stage_block_list = pygame.sprite.Group()
         self.enemy_list = pygame.sprite.Group()
         self.door_list = pygame.sprite.Group()
@@ -16,6 +12,7 @@ class Stage():
         self.player = player
         self.break_points = None
         self.BLOCKSIZE = 30
+        self.stageBuilder(player, stageId)
 
     def update(self):
         self.stage_block_list.update()
@@ -42,9 +39,16 @@ class Stage():
         for door in self.door_list:
             door.rect.x += shift_x
 
-    def stageBuilder(self,filename,player):
+    def stageBuilder(self, player, stageId):
+        optNun = 0
+        opt = []
+        with open("data/stage_" + stageId + ".pyopt", "r") as file:
+            for line in file:
+                line = line.rstrip()
+                opt.append(line.split(","))
+        opt.reverse()
         map = []
-        with open(filename, "r") as file:
+        with open("data/stage_" + stageId + ".pymap", "r") as file:
             for line in file:
                 line = line.rstrip()
                 map.append(list(line))
@@ -52,81 +56,27 @@ class Stage():
         map.reverse()
         self.row = len(map)
         self.col = len(map[0])
-        self.level_limit = SCREEN_HEIGHT + ( -1 * (self.col -1) * self.BLOCKSIZE)
+        self.level_limit = SCREEN_HEIGHT + ( -1 * (self.col -1) * self.BLOCKSIZE )
         print(-1 * (self.col -1) * self.BLOCKSIZE)
         self.width = self.col * self.BLOCKSIZE
         self.height = self.row * self.BLOCKSIZE
         for i in range(self.row):
             for j in range(self.col):
                 if map[i][j] == 'B':
-                    block = Block(j*self.BLOCKSIZE,SCREEN_HEIGHT - i*self.BLOCKSIZE)
+                    block = Block( j * self.BLOCKSIZE, SCREEN_HEIGHT - i * self.BLOCKSIZE )
                     block.player = player
-                    self.stage_block_list.add(block)
+                    self.stage_block_list.add( block )
                 elif map[i][j] == 'c':
-                    coin = Coin(j*self.BLOCKSIZE,SCREEN_HEIGHT- i*self.BLOCKSIZE)
-                    self.item_list.add(coin)
+                    coin = Coin( j * self.BLOCKSIZE, SCREEN_HEIGHT - i * self.BLOCKSIZE)
+                    self.item_list.add( coin )
                 elif map[i][j] == 'm':
-                    mob = Mob(j*self.BLOCKSIZE,SCREEN_HEIGHT - i*self.BLOCKSIZE ,30 ,30)
-                    self.enemy_list.add(mob)
+                    mob = Mob( j * self.BLOCKSIZE, SCREEN_HEIGHT - i * self.BLOCKSIZE, 30, 30)
+                    self.enemy_list.add( mob )
                 elif map[i][j] == 'd':
-                    door = Door(j*self.BLOCKSIZE,SCREEN_HEIGHT - i*self.BLOCKSIZE)
-                    self.door_list.add(door)
+                    door = Door( j * self.BLOCKSIZE, SCREEN_HEIGHT - i * self.BLOCKSIZE, opt[ optNun ] )
+                    self.door_list.add( door )
+                    optNun += 1
 
 
     def loadStage(self):
         pass
-
-class Stage_01(Stage):
-    def __init__(self, player):
-        super().__init__(self)
-        self.stageBuilder("data/stage_01.pymap",self.player)
-
-class Stage_02(Stage):
-    def __init__(self, player):
-        Stage.__init__(self, player)
-        self.level_limit = -1000
-        level = [[210, 30, 450, 570],
-                 [210, 30, 850, 420],
-                 [210, 30, 1000, 520],
-                 [210, 30, 1120, 280],
-                 ]
-        for platform in level:
-            block = StageObject(platform[0], platform[1])
-            block.rect.x = platform[2]
-            block.rect.y = platform[3]
-            block.player = self.player
-            self.stage_block_list.add(block)
-
-
-class Stage_03(Stage):
-    def __init__(self, player):
-        Stage.__init__(self, player)
-        self.level_limit = -1000
-        level = [[210, 70, 500, 500],
-                 [210, 70, 800, 400],
-                 [210, 70, 1000, 500],
-                 [210, 70, 1120, 280],
-                 ]
-        for platform in level:
-            block = StageObject(platform[0], platform[1])
-            block.rect.x = platform[2]
-            block.rect.y = platform[3]
-            block.player = self.player
-            self.stage_block_list.add(block)
-
-
-class Stage_04(Stage):
-    def __init__(self, player):
-        Stage.__init__(self, player)
-        self.stage_limit = -1000
-        level = [[210, 30, 450, 570],
-                 [210, 30, 850, 420],
-                 [210, 30, 1000, 520],
-                 [210, 30, 1120, 280],
-                 ]
-        for platform in level:
-            block = StageObject(platform[0], platform[1])
-            block.rect.x = platform[2]
-            block.rect.y = platform[3]
-            block.player = self.player
-            self.stage_block_list.add(block)
