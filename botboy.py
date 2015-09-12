@@ -51,15 +51,18 @@ class Player(pygame.sprite.Sprite):
             print(self.score)
         enemy_hit_list = pygame.sprite.spritecollide(self, self.stage.enemy_list, False)
         for enemy in enemy_hit_list:
-            # global gameover
-            print("enemy:"+ str(enemy.rect.y))
-            print("playover:" + str(self.game.player.rect.y + self.game.player.rect.height))
             if enemy.rect.y >= self.game.player.rect.y + self.game.player.rect.height - self.game.player.change_y:
                 enemy.kill()
             else:
                 self.game.gameover = True
-
-
+        door_hit_list = pygame.sprite.spritecollide(self, self.stage.door_list, False)
+        if len(door_hit_list) > 0:
+            print("hit!")
+            self.rect.x = 120
+            if self.game.current_stage_no < len(self.game.stage_list) - 1:
+                self.game.current_stage_no += 1
+                self.game.current_stage = self.game.stage_list[self.game.current_stage_no]
+                self.stage = self.game.current_stage
 
     def calc_grav(self):
         if self.change_y == 0:
@@ -102,6 +105,7 @@ class Botboy(Player):
         self.change_y = 0
         self.stage = None
         self.score = 0
+
     def go_left(self):
         super().go_left()
         self.image = self.left_botboy_image
@@ -111,7 +115,7 @@ class Botboy(Player):
         self.image = self.right_botboy_image
 
 class Mob(pygame.sprite.Sprite):
-    def __init__(self,x_pos, y_pos, width, height):
+    def __init__(self, x_pos, y_pos, width, height):
         super().__init__()
         self.image = pygame.Surface([width, height])
         self.image.fill(RED)
@@ -163,14 +167,28 @@ class Block(StageObject):
         self.rect.x = x_pos
         self.rect.y = y_pos
 
+class Door(StageObject):
+    def __init__(self,x_pos,y_pos):
+        pygame.sprite.Sprite.__init__(self)
+        self.image = pygame.Surface([30,30])
+        self.image.fill(WHITE)
+        pygame.draw.rect(self.image, BLACK, (0,0,30,30), 0)
+        self.rect = self.image.get_rect()
+        self.rect.x = x_pos
+        self.rect.y = y_pos
+    def check(self):
+        return True
+
 class Stage():
     stage_block_list = None
     enemy_list = None
+    door_list = None
     world_shift = 0
 
     def __init__(self, player):
         self.stage_block_list = pygame.sprite.Group()
         self.enemy_list = pygame.sprite.Group()
+        self.door_list = pygame.sprite.Group()
         self.item_list = pygame.sprite.Group()
         self.player = player
         self.break_points = None
@@ -180,12 +198,15 @@ class Stage():
         self.stage_block_list.update()
         self.enemy_list.update()
         self.item_list.update()
+        self.door_list.update()
+
 
     def draw(self, screen):
         screen.fill(WHITE)
         self.stage_block_list.draw(screen)
         self.enemy_list.draw(screen)
         self.item_list.draw(screen)
+        self.door_list.draw(screen)
 
     def shift_world(self, shift_x):
         self.world_shift += shift_x
@@ -195,6 +216,8 @@ class Stage():
             enemy.rect.x += shift_x
         for item in self.item_list:
             item.rect.x += shift_x
+        for door in self.door_list:
+            door.rect.x += shift_x
 
     def stageBuilder(self,filename,player):
         map = []
@@ -206,7 +229,8 @@ class Stage():
         map.reverse()
         self.row = len(map)
         self.col = len(map[0])
-        self.level_limit = -1 * (self.col -1) * self.BLOCKSIZE
+        self.level_limit = SCREEN_HEIGHT + ( -1 * (self.col -1) * self.BLOCKSIZE)
+        print(-1 * (self.col -1) * self.BLOCKSIZE)
         self.width = self.col * self.BLOCKSIZE
         self.height = self.row * self.BLOCKSIZE
         for i in range(self.row):
@@ -221,15 +245,18 @@ class Stage():
                 elif map[i][j] == 'm':
                     mob = Mob(j*self.BLOCKSIZE,SCREEN_HEIGHT - i*self.BLOCKSIZE ,30 ,30)
                     self.enemy_list.add(mob)
+                elif map[i][j] == 'd':
+                    door = Door(j*self.BLOCKSIZE,SCREEN_HEIGHT - i*self.BLOCKSIZE)
+                    self.door_list.add(door)
 
+
+    def loadStage(self):
+        pass
 
 class Stage_01(Stage):
     def __init__(self, player):
         super().__init__(self)
-        #self.level_limit = -1000
         self.stageBuilder("data/stage_01.pymap",self.player)
-
-
 
 class Stage_02(Stage):
     def __init__(self, player):
@@ -374,14 +401,20 @@ class BotboyGame:
             self.player.rect.left = 120
             self.current_stage.shift_world(diff)
         self.current_position = self.player.rect.x + self.current_stage.world_shift
-        if self.current_position < self.current_stage.level_limit:
-            self.player.rect.x = 120
-            if self.current_stage_no < len(self.stage_list) - 1:
-                self.current_stage_no += 1
-                self.current_stage = self.stage_list[self.current_stage_no]
-                self.player.stage = self.current_stage
+        # if self.current_stage.check():
+        #     pass
+        # 削除予定コード
+        # print("currentPos" + str(self.current_position) ,end="\r")
+        # if self.current_position < self.current_stage.level_limit:
+        #     self.player.rect.x = 120
+        #     if self.current_stage_no < len(self.stage_list) - 1:
+        #         self.current_stage_no += 1
+        #         self.current_stage = self.stage_list[self.current_stage_no]
+        #         self.player.stage = self.current_stage
         if self.player.rect.y >= SCREEN_HEIGHT + self.player.rect.height and self.player.change_y >= 0:
             self.gameover=True
+            self.player.stop()
+
     def drow(self):
         self.current_stage.draw(self.screen)
         self.active_sprite_list.draw(self.screen)
