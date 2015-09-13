@@ -8,7 +8,7 @@ from gameMob import *
 from gameStage import *
 
 class BotboyGame:
-    def __init__(self):
+    def __init__(self, loadData = False):
         # pygameの初期設定
         pygame.init()
         pygame.display.set_caption("BotBoy")
@@ -29,6 +29,30 @@ class BotboyGame:
         self.player.rect.x = 340
         self.player.rect.y = SCREEN_HEIGHT - self.player.rect.height
         self.active_sprite_list.add(self.player)
+
+        # ゲームの基本定数
+        if loadData == False:
+            self.score = 0
+            self.currentSavePoint = ["01", 0, 120, 530]
+            self.currentDeathPoint = None
+        else:
+            with open("data/saveData", "r") as saveFile:
+                self.score = eval(saveFile.readline().rstrip("\n"))
+                saveData = eval(saveFile.readline().rstrip("\n"))
+                if saveData[0] in self.stageDict:
+                    self.current_stage = self.stageDict[saveData[0]]
+                else:
+                    self.current_stage = Stage(self, self, [saveData[0],[saveData[3],saveData[1]]])
+                    self.stageDict[saveData[0]] = self.current_stage
+                self.player.stage = self.current_stage
+                try: # プレーヤーのy変更
+                    self.player.rect.y = saveData[3]
+                except: pass
+                try: # world_shiftの変更
+                    self.current_stage.shift_world(saveData[1])
+                except: pass
+                self.currentSavePoint = eval(saveFile.readline().rstrip("\n"))
+                self.currentDeathPoint = eval(saveFile.readline().rstrip("\n"))
 
         # ゲームの用意
         self.done = False
@@ -51,6 +75,8 @@ class BotboyGame:
                         if event.key == pygame.K_UP:
                             self.k_up = True
                             self.player.jump()
+                        if event.key == pygame.K_s: #セーブ
+                            self.save()
                     if event.type == pygame.KEYUP:
                         if event.key == pygame.K_LEFT and self.player.change_x < 0:
                             self.player.stop()
@@ -65,7 +91,7 @@ class BotboyGame:
                          self.done = True
                      elif event.type == pygame.KEYDOWN and event.key == pygame.K_RETURN:
                          self.gameover = False
-                         self.player.rect.y = 0
+                         self.load()
 
                  self.text = self.font.render("Game Over", True, WHITE)
                  self.text_rect = self.text.get_rect()
@@ -95,20 +121,55 @@ class BotboyGame:
             diff = 120 - self.player.rect.left
             self.player.rect.left = 120
             self.current_stage.shift_world(diff)
-        self.current_position = self.player.rect.x + self.current_stage.world_shift
         if self.player.rect.y >= SCREEN_HEIGHT + self.player.rect.height and self.player.change_y >= 0:
-            self.gameover=True
-            self.player.stop()
+            self.death()
+            self.gameOver()
+
+    def death(self):
+        stage = self.current_stage
+        playerY = self.player.rect.y
+        playerX = self.player.rect.x
+        self.currentDeathPoint = [stage.stageId,stage.world_shift, playerX, playerY]
 
     def drow(self):
         self.current_stage.draw(self.screen)
         self.active_sprite_list.draw(self.screen)
-        self.text = self.font.render("Total Credit: " + str(self.player.score), True, BLACK)
+        self.text = self.font.render("Total Credit: " + str(self.score), True, BLACK)
         self.text_rect = self.text.get_rect()
         self.text_x = self.screen.get_width() - self.text_rect.width * 1.2
         self.text_y = 20
         self.screen.blit(self.text, [self.text_x, self.text_y])
 
+    def save(self):
+        stage = self.current_stage
+        playerY = self.player.rect.y
+        playerX = self.player.rect.x
+        savePoint = [stage.stageId,stage.world_shift, playerX, playerY]
+        with open("data/saveData","w") as saveFile:
+            saveFile.write(str(self.score))
+            saveFile.write("\n")
+            saveFile.write(str(savePoint))
+            saveFile.write("\n")
+            saveFile.write(str(self.currentSavePoint))
+            saveFile.write("\n")
+            saveFile.write(str(self.currentDeathPoint))
+            saveFile.write("\n")
+
+    def gameOver(self):
+        self.gameover = True
+        self.player.stop()
+
+    def load(self):
+        data = self.currentSavePoint
+        if data is not None:
+            self.current_stage = self.stageDict[data[0]]
+            self.current_stage.shift_world( -1 * self.currentDeathPoint[1] )
+            self.current_stage.world_shift = 0
+            self.current_stage.shift_world(data[1])
+            self.player.rect.x = data[2]
+            self.player.rect.y = data[3]
+        else: # sevePointを通過しなかったとき
+            pass
 
 game = BotboyGame()
 game.main()

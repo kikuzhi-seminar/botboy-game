@@ -9,14 +9,35 @@ class StageObject(pygame.sprite.Sprite):
         self.rect = self.image.get_rect()
 
 class Coin(StageObject):
-    def __init__(self, x_pos ,y_pos):
+    def __init__(self, x_pos ,y_pos, game):
         pygame.sprite.Sprite.__init__(self)
+        self.game = game
         self.image = pygame.Surface([20,20])
         self.image.fill(WHITE)
         pygame.draw.circle(self.image, YELLOW, (10, 10), 10, 0)
         self.image.set_colorkey(self.image.get_at((0,0)), pygame.RLEACCEL)
         self.rect = self.image.get_rect()
         self.rect.center = (x_pos + 15,y_pos +15)
+
+    def action(self):
+        self.game.score += 1
+
+class SavePoint(StageObject):
+    def __init__(self, x_pos, y_pos, game):
+        pygame.sprite.Sprite.__init__(self)
+        self.game = game
+        self.image = pygame.Surface([20,20])
+        self.image.fill(WHITE)
+        pygame.draw.circle(self.image, BLUE, (10, 10), 10, 0)
+        self.image.set_colorkey(self.image.get_at((0,0)), pygame.RLEACCEL)
+        self.rect = self.image.get_rect()
+        self.rect.center = (x_pos + 15,y_pos +15)
+
+    def action(self):
+        stage = self.game.current_stage
+        playerY = self.game.player.rect.y
+        playerX = self.game.player.rect.x
+        self.game.currentSavePoint = [stage.stageId,stage.world_shift, playerX, playerY]
 
 class Block(StageObject):
     def __init__(self,x_pos,y_pos):

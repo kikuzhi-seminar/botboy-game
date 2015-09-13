@@ -33,16 +33,18 @@ class Player(pygame.sprite.Sprite):
             elif self.change_y < 0:
                 self.rect.top = block.rect.bottom
             self.change_y = 0
-        item_hit_list = pygame.sprite.spritecollide(self, self.stage.item_list,True)
+        # アイテムの実装
+        item_hit_list = pygame.sprite.spritecollide(self, self.stage.item_list, True)
         for item in item_hit_list:
-            self.score += 1
+            item.action()
         # 敵との判定の実装
         enemy_hit_list = pygame.sprite.spritecollide(self, self.stage.enemy_list, False)
         for enemy in enemy_hit_list:
             if enemy.rect.y >= self.game.player.rect.y + self.game.player.rect.height - self.game.player.change_y:
                 enemy.kill()
             else:
-                self.game.gameover = True
+                self.game.death()
+                self.game.gameOver()
         # Doorオブジェクトのワープの実装
         door_hit_list = pygame.sprite.spritecollide(self, self.stage.door_list, False)
         if len(door_hit_list) > 0 and door_hit_list[0].check():
@@ -101,7 +103,6 @@ class Botboy(Player):
         self.change_x = 0
         self.change_y = 0
         self.stage = None
-        self.score = 0
 
     def go_left(self):
         super().go_left()

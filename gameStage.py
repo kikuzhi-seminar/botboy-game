@@ -13,6 +13,7 @@ class Stage():
         self.player = player
         self.break_points = None
         self.BLOCKSIZE = 30
+        self.stageId = stageOpt[0]
         self.stageBuilder(self.game, self.player, stageOpt)
 
     def update(self):
@@ -66,8 +67,11 @@ class Stage():
                     block.player = player
                     self.stage_block_list.add( block )
                 elif map[i][j] == 'c':
-                    coin = Coin( j * self.BLOCKSIZE, SCREEN_HEIGHT - i * self.BLOCKSIZE)
+                    coin = Coin( j * self.BLOCKSIZE, SCREEN_HEIGHT - i * self.BLOCKSIZE, self.game)
                     self.item_list.add( coin )
+                elif map[i][j] == 's':
+                    savePoint = SavePoint( j * self.BLOCKSIZE, SCREEN_HEIGHT - i * self.BLOCKSIZE, self.game)
+                    self.item_list.add( savePoint )
                 elif map[i][j] == 'm':
                     mob = Mob( j * self.BLOCKSIZE, SCREEN_HEIGHT - i * self.BLOCKSIZE, 30, 30)
                     self.enemy_list.add( mob )
@@ -75,7 +79,3 @@ class Stage():
                     door = Door( j * self.BLOCKSIZE, SCREEN_HEIGHT - i * self.BLOCKSIZE, self.game, opt[ optNun ] )
                     self.door_list.add( door )
                     optNun += 1
-
-
-    def loadStage(self):
-        pass
