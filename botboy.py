@@ -20,7 +20,8 @@ class BotboyGame:
         self.choseChar()
 
         # ステージ作成
-        self.current_stage = Stage(self.player,"01")
+        self.current_stage = Stage(self, self.player, ["01"])
+        self.stageDict = {"01":self.current_stage}
 
         # クラス内のオブジェクトをリンクさせている。
         self.active_sprite_list = pygame.sprite.Group()
@@ -37,6 +38,7 @@ class BotboyGame:
     # メインループ
     def main(self):
         while not self.done:
+            self.k_up = False
             if not self.gameover:
                 for event in pygame.event.get():
                     if event.type == pygame.QUIT:
@@ -47,6 +49,7 @@ class BotboyGame:
                         if event.key == pygame.K_RIGHT:
                             self.player.go_right()
                         if event.key == pygame.K_UP:
+                            self.k_up = True
                             self.player.jump()
                     if event.type == pygame.KEYUP:
                         if event.key == pygame.K_LEFT and self.player.change_x < 0:

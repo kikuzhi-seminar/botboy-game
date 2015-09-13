@@ -29,8 +29,10 @@ class Block(StageObject):
         self.rect.y = y_pos
 
 class Door(StageObject):
-    def __init__(self, x_pos, y_pos, doorOpt):
+    # doorOpt (stageId, condition = "on",pos[playerY,world_shift] )
+    def __init__(self, x_pos, y_pos, game, doorOpt):
         pygame.sprite.Sprite.__init__(self)
+        self.game = game
         self.image = pygame.Surface([30,30])
         self.image.fill(WHITE)
         pygame.draw.rect(self.image, BLACK, (0,0,30,30), 0)
@@ -38,9 +40,21 @@ class Door(StageObject):
         self.rect.x = x_pos
         self.rect.y = y_pos
         self.stageId = doorOpt[0]
+        try:
+            self.condition = doorOpt[1]
+        except:
+            self.condition = "on"
+        try:
+            self.pos = [int(x) for x in doorOpt[2].split("/")]
+        except:
+            self.pos = []
 
     def check(self):
-        return True
-
-    def nextStage(self):
-        return self.stageId
+        if self.condition == "on":
+            return True
+        elif self.condition == "up":
+            if self.game.k_up:
+                self.game.player.change_y = 0
+                return True
+            else:
+                return False
