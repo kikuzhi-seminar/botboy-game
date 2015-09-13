@@ -14,7 +14,6 @@ class Mob(pygame.sprite.Sprite):
         self.rect.y = y_pos
 
     def update(self):
-        # self.rect.x -= 3
         pass
 
     def move(self):

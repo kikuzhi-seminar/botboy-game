@@ -9,14 +9,35 @@ class StageObject(pygame.sprite.Sprite):
         self.rect = self.image.get_rect()
 
 class Coin(StageObject):
-    def __init__(self, x_pos ,y_pos):
+    def __init__(self, x_pos ,y_pos, game):
         pygame.sprite.Sprite.__init__(self)
+        self.game = game
         self.image = pygame.Surface([20,20])
         self.image.fill(WHITE)
         pygame.draw.circle(self.image, YELLOW, (10, 10), 10, 0)
         self.image.set_colorkey(self.image.get_at((0,0)), pygame.RLEACCEL)
         self.rect = self.image.get_rect()
         self.rect.center = (x_pos + 15,y_pos +15)
+
+    def action(self):
+        self.game.score += 1
+
+class SavePoint(StageObject):
+    def __init__(self, x_pos, y_pos, game):
+        pygame.sprite.Sprite.__init__(self)
+        self.game = game
+        self.image = pygame.Surface([20,20])
+        self.image.fill(WHITE)
+        pygame.draw.circle(self.image, BLUE, (10, 10), 10, 0)
+        self.image.set_colorkey(self.image.get_at((0,0)), pygame.RLEACCEL)
+        self.rect = self.image.get_rect()
+        self.rect.center = (x_pos + 15,y_pos +15)
+
+    def action(self):
+        stage = self.game.current_stage
+        playerY = self.game.player.rect.y
+        playerX = self.game.player.rect.x
+        self.game.currentSavePoint = [stage.stageId,stage.world_shift, playerX, playerY]
 
 class Block(StageObject):
     def __init__(self,x_pos,y_pos):
@@ -29,8 +50,10 @@ class Block(StageObject):
         self.rect.y = y_pos
 
 class Door(StageObject):
-    def __init__(self, x_pos, y_pos, doorOpt):
+    # doorOpt (stageId, condition = "on",pos[playerY,world_shift] )
+    def __init__(self, x_pos, y_pos, game, doorOpt):
         pygame.sprite.Sprite.__init__(self)
+        self.game = game
         self.image = pygame.Surface([30,30])
         self.image.fill(WHITE)
         pygame.draw.rect(self.image, BLACK, (0,0,30,30), 0)
@@ -38,9 +61,21 @@ class Door(StageObject):
         self.rect.x = x_pos
         self.rect.y = y_pos
         self.stageId = doorOpt[0]
+        try:
+            self.condition = doorOpt[1]
+        except:
+            self.condition = "on"
+        try:
+            self.pos = [int(x) for x in doorOpt[2].split("/")]
+        except:
+            self.pos = []
 
     def check(self):
-        return True
-
-    def nextStage(self):
-        return self.stageId
+        if self.condition == "on":
+            return True
+        elif self.condition == "up":
+            if self.game.k_up:
+                self.game.player.change_y = 0
+                return True
+            else:
+                return False

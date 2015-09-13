@@ -3,7 +3,8 @@ from util import *
 from gameStageObject import *
 
 class Stage():
-    def __init__(self, player, stageId):
+    def __init__(self, game, player, stageOpt):
+        self.game = game
         self.world_shift = 0
         self.stage_block_list = pygame.sprite.Group()
         self.enemy_list = pygame.sprite.Group()
@@ -12,7 +13,8 @@ class Stage():
         self.player = player
         self.break_points = None
         self.BLOCKSIZE = 30
-        self.stageBuilder(player, stageId)
+        self.stageId = stageOpt[0]
+        self.stageBuilder(self.game, self.player, stageOpt)
 
     def update(self):
         self.stage_block_list.update()
@@ -39,16 +41,16 @@ class Stage():
         for door in self.door_list:
             door.rect.x += shift_x
 
-    def stageBuilder(self, player, stageId):
+    def stageBuilder(self, game, player, stageOpt):
         optNun = 0
         opt = []
-        with open("data/stage_" + stageId + ".pyopt", "r") as file:
+        with open("data/stage_" + stageOpt[0] + ".pyopt", "r") as file:
             for line in file:
                 line = line.rstrip()
                 opt.append(line.split(","))
         opt.reverse()
         map = []
-        with open("data/stage_" + stageId + ".pymap", "r") as file:
+        with open("data/stage_" + stageOpt[0] + ".pymap", "r") as file:
             for line in file:
                 line = line.rstrip()
                 map.append(list(line))
@@ -56,8 +58,6 @@ class Stage():
         map.reverse()
         self.row = len(map)
         self.col = len(map[0])
-        self.level_limit = SCREEN_HEIGHT + ( -1 * (self.col -1) * self.BLOCKSIZE )
-        print(-1 * (self.col -1) * self.BLOCKSIZE)
         self.width = self.col * self.BLOCKSIZE
         self.height = self.row * self.BLOCKSIZE
         for i in range(self.row):
@@ -67,16 +67,15 @@ class Stage():
                     block.player = player
                     self.stage_block_list.add( block )
                 elif map[i][j] == 'c':
-                    coin = Coin( j * self.BLOCKSIZE, SCREEN_HEIGHT - i * self.BLOCKSIZE)
+                    coin = Coin( j * self.BLOCKSIZE, SCREEN_HEIGHT - i * self.BLOCKSIZE, self.game)
                     self.item_list.add( coin )
+                elif map[i][j] == 's':
+                    savePoint = SavePoint( j * self.BLOCKSIZE, SCREEN_HEIGHT - i * self.BLOCKSIZE, self.game)
+                    self.item_list.add( savePoint )
                 elif map[i][j] == 'm':
                     mob = Mob( j * self.BLOCKSIZE, SCREEN_HEIGHT - i * self.BLOCKSIZE, 30, 30)
                     self.enemy_list.add( mob )
-                elif map[i][j] == 'd':
-                    door = Door( j * self.BLOCKSIZE, SCREEN_HEIGHT - i * self.BLOCKSIZE, opt[ optNun ] )
+                elif map[i][j] == 'D':
+                    door = Door( j * self.BLOCKSIZE, SCREEN_HEIGHT - i * self.BLOCKSIZE, self.game, opt[ optNun ] )
                     self.door_list.add( door )
                     optNun += 1
-
-
-    def loadStage(self):
-        pass
