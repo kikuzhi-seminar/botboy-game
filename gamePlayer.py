@@ -94,7 +94,7 @@ class Botboy(Player):
     def __init__(self,game):
         pygame.sprite.Sprite.__init__(self)
         self.game = game
-        self.left_botboy_image = pygame.image.load("data/python.png")
+        self.left_botboy_image = pygame.image.load("data/botboy.png")
         self.left_botboy_image.set_colorkey(-1,pygame.RLEACCEL)
         self.right_botboy_image = pygame.transform.flip(self.left_botboy_image,True,False)
         self.image = self.right_botboy_image
