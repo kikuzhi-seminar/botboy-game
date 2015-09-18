@@ -14,7 +14,9 @@ class Coin(StageObject):
         self.game = game
         self.image = pygame.Surface([20,20])
         self.image.fill(WHITE)
-        pygame.draw.circle(self.image, YELLOW, (10, 10), 10, 0)
+        pygame.draw.circle(self.image, CBROWN, (10, 10), 10, 0)
+        pygame.draw.circle(self.image, YELLOW, (10, 10), 9, 0)
+        pygame.draw.rect(self.image, GRAY, (9,4,2,12), 0)
         self.image.set_colorkey(self.image.get_at((0,0)), pygame.RLEACCEL)
         self.rect = self.image.get_rect()
         self.rect.center = (x_pos + 15,y_pos +15)
@@ -44,7 +46,14 @@ class Block(StageObject):
         pygame.sprite.Sprite.__init__(self)
         self.image = pygame.Surface([30,30])
         self.image.fill(WHITE)
-        pygame.draw.rect(self.image, GREEN, (0,0,30,30), 0)
+        pygame.draw.rect(self.image, DBROWN, (0,0,30,30), 0)
+        pygame.draw.rect(self.image, BROWN, (1,1,28,28), 0)
+        pygame.draw.circle(self.image, DBROWN, (5, 5), 8, 0)
+        pygame.draw.circle(self.image, DBROWN, (8, 15), 4, 0)
+        pygame.draw.circle(self.image, DBROWN, (25, 12), 5, 0)
+        pygame.draw.circle(self.image, DBROWN, (20, 22), 6, 0)
+        pygame.draw.circle(self.image, DBROWN, (8, 25), 5, 0)
+        pygame.draw.rect(self.image, GREEN, (0,0,30,5), 0)
         self.rect = self.image.get_rect()
         self.rect.x = x_pos
         self.rect.y = y_pos
@@ -56,7 +65,9 @@ class Door(StageObject):
         self.game = game
         self.image = pygame.Surface([30,30])
         self.image.fill(WHITE)
-        pygame.draw.rect(self.image, BLACK, (0,0,30,30), 0)
+        pygame.draw.rect(self.image, CBROWN, (0,0,30,30), 0)
+        pygame.draw.rect(self.image, WBROWN, (3,3,10,24), 0)
+        pygame.draw.rect(self.image, WBROWN, (17,3,10,24), 0)
         self.rect = self.image.get_rect()
         self.rect.x = x_pos
         self.rect.y = y_pos

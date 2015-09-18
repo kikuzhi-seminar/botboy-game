@@ -24,7 +24,7 @@ class Stage():
 
 
     def draw(self, screen):
-        screen.fill(WHITE)
+        screen.fill(LBLUE)
         self.stage_block_list.draw(screen)
         self.enemy_list.draw(screen)
         self.item_list.draw(screen)
