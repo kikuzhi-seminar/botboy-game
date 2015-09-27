@@ -7,6 +7,7 @@ from gamePlayer import *
 from gameMob import *
 from gameStage import *
 
+
 class BotboyGame:
     def __init__(self, loadData = False):
         # pygameの初期設定
@@ -56,7 +57,9 @@ class BotboyGame:
 
         # ゲームの用意
         self.done = False
+        self.died = False
         self.gameover = False
+        self.life = 5
         self.clock = pygame.time.Clock()
 
     # メインループ
@@ -64,36 +67,61 @@ class BotboyGame:
         while not self.done:
             self.k_up = False
             if not self.gameover:
-                for event in pygame.event.get():
-                    if event.type == pygame.QUIT:
-                        self.done = True
-                    if event.type == pygame.KEYDOWN:
-                        if event.key == pygame.K_LEFT:
-                            self.player.go_left()
-                        if event.key == pygame.K_RIGHT:
-                            self.player.go_right()
-                        if event.key == pygame.K_UP:
-                            self.k_up = True
-                            self.player.jump()
-                        if event.key == pygame.K_s: #セーブ
-                            self.save()
-                    if event.type == pygame.KEYUP:
-                        if event.key == pygame.K_LEFT and self.player.change_x < 0:
-                            self.player.stop()
-                        if event.key == pygame.K_RIGHT and self.player.change_x > 0:
-                            self.player.stop()
-                self.update()
-                self.drow()
+                if not self.died:
+                    for event in pygame.event.get():
+                        if event.type == pygame.QUIT:
+                            self.done = True
+                        if event.type == pygame.KEYDOWN:
+                            if event.key == pygame.K_LEFT:
+                                self.player.go_left()
+                            if event.key == pygame.K_RIGHT:
+                                self.player.go_right()
+                            if event.key == pygame.K_UP:
+                                self.k_up = True
+                                self.player.jump()
+                            if event.key == pygame.K_s: #セーブ
+                                self.save()
+                        if event.type == pygame.KEYUP:
+                            if event.key == pygame.K_LEFT and self.player.change_x < 0:
+                                self.player.stop()
+                            if event.key == pygame.K_RIGHT and self.player.change_x > 0:
+                                self.player.stop()
+                    self.update()
+                    self.drow()
+                else:
+                     self.screen.fill(BLACK)
+                     for event in pygame.event.get():
+                         if event.type == pygame.QUIT:
+                             self.done = True
+                         elif event.type == pygame.KEYDOWN and event.key == pygame.K_RETURN:
+                             self.life -= 1
+                             self.died = False
+                             self.load()
+
+                     self.text = self.font.render("YOU DIED", True, RED)
+                     self.text_rect = self.text.get_rect()
+                     self.text_x = self.screen.get_width() / 2 - self.text_rect.width / 2
+                     self.text_y = self.screen.get_height() / 2 - self.text_rect.height / 2
+                     self.screen.blit(self.text, [self.text_x, self.text_y])
+                     self.text = self.font.render("Press Enter to Continue!", True, WHITE)
+                     self.text_rect = self.text.get_rect()
+                     self.text_x = self.screen.get_width() / 2 - self.text_rect.width / 2
+                     self.text_y = self.screen.get_height() / 2 - self.text_rect.height / 2 + 50
+                     self.screen.blit(self.text, [self.text_x, self.text_y])
+
             else:
                  self.screen.fill(BLACK)
                  for event in pygame.event.get():
-                     if event.type == pygame.QUIT:
+                     if event.type ==pygame.QUIT:
                          self.done = True
                      elif event.type == pygame.KEYDOWN and event.key == pygame.K_RETURN:
+                         self.life=5
                          self.gameover = False
                          self.load()
+                         game = BotboyGame()
+                         game.main()
 
-                 self.text = self.font.render("Game Over", True, WHITE)
+                 self.text = self.font.render("GAME OVER", True, RED)
                  self.text_rect = self.text.get_rect()
                  self.text_x = self.screen.get_width() / 2 - self.text_rect.width / 2
                  self.text_y = self.screen.get_height() / 2 - self.text_rect.height / 2
@@ -122,8 +150,11 @@ class BotboyGame:
             self.player.rect.left = 120
             self.current_stage.shift_world(diff)
         if self.player.rect.y >= SCREEN_HEIGHT + self.player.rect.height and self.player.change_y >= 0:
+            self.died=True
             self.death()
-            self.gameOver()
+            self.Died
+        if self.life == 0:
+            self.gameover = True
 
     def death(self):
         stage = self.current_stage
@@ -134,10 +165,16 @@ class BotboyGame:
     def drow(self):
         self.current_stage.draw(self.screen)
         self.active_sprite_list.draw(self.screen)
-        self.text = self.font.render("Total Credit: " + str(self.score), True, BLACK)
+        self.text = self.font.render("Total Life    : " + str(self.life), True, BLACK)
         self.text_rect = self.text.get_rect()
         self.text_x = self.screen.get_width() - self.text_rect.width * 1.2
         self.text_y = 20
+        self.screen.blit(self.text, [self.text_x, self.text_y])
+
+        self.text =self.font.render("Total Credit: " + str(self.score), True, BLACK)
+        self.text_rect = self.text.get_rect()
+        self.text_x = self.screen.get_width() - self.text_rect.width * 1.2
+        self.text_y = 50
         self.screen.blit(self.text, [self.text_x, self.text_y])
 
     def save(self):
@@ -157,7 +194,12 @@ class BotboyGame:
 
     def gameOver(self):
         self.gameover = True
+        self.life = 5
+
+    def Died(self):
+        self.died = True
         self.player.stop()
+
 
     def load(self):
         data = self.currentSavePoint

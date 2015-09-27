@@ -44,7 +44,7 @@ class Player(pygame.sprite.Sprite):
                 enemy.kill()
             else:
                 self.game.death()
-                self.game.gameOver()
+                self.game.died()
         # Doorオブジェクトのワープの実装
         door_hit_list = pygame.sprite.spritecollide(self, self.stage.door_list, False)
         if len(door_hit_list) > 0 and door_hit_list[0].check():
