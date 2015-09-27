@@ -70,7 +70,7 @@ class BotboyGame:
                 if not self.died:
                     for event in pygame.event.get():
                         if event.type == pygame.QUIT:
-                            self.done = True
+                            return True
                         if event.type == pygame.KEYDOWN:
                             if event.key == pygame.K_LEFT:
                                 self.player.go_left()
@@ -92,7 +92,7 @@ class BotboyGame:
                      self.screen.fill(BLACK)
                      for event in pygame.event.get():
                          if event.type == pygame.QUIT:
-                             self.done = True
+                             return True
                          elif event.type == pygame.KEYDOWN and event.key == pygame.K_RETURN:
                              self.life -= 1
                              self.died = False
@@ -113,13 +113,11 @@ class BotboyGame:
                  self.screen.fill(BLACK)
                  for event in pygame.event.get():
                      if event.type ==pygame.QUIT:
-                         self.done = True
+                         return True
                      elif event.type == pygame.KEYDOWN and event.key == pygame.K_RETURN:
                          self.life=5
                          self.gameover = False
-                         self.load()
-                         game = BotboyGame()
-                         game.main()
+                         self.done=True
 
                  self.text = self.font.render("GAME OVER", True, RED)
                  self.text_rect = self.text.get_rect()
@@ -152,7 +150,6 @@ class BotboyGame:
         if self.player.rect.y >= SCREEN_HEIGHT + self.player.rect.height and self.player.change_y >= 0:
             self.died=True
             self.death()
-            self.Died
         if self.life == 0:
             self.gameover = True
 
@@ -194,7 +191,6 @@ class BotboyGame:
 
     def gameOver(self):
         self.gameover = True
-        self.life = 5
 
     def Died(self):
         self.died = True
@@ -213,6 +209,10 @@ class BotboyGame:
         else: # sevePointを通過しなかったとき
             pass
 
-game = BotboyGame()
-game.main()
+
+pygame.init()
+done=False
+while not done:
+    game = BotboyGame()
+    done=game.main()
 pygame.quit()
