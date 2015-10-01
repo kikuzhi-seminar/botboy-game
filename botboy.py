@@ -206,7 +206,7 @@ class BotboyGame:
 def opening():
     done = False
     screen.fill(BLACK)
-    renderText(screen,bigFont,"Bot-Boy",0,- 50,WHITE)
+    renderText(screen,bigFont,"Bot-Boy",0, -50,WHITE)
     renderText(screen,font,"Load game > LEFT KEY ",0,70,WHITE)
     renderText(screen,font,"New game > RIGHT KEY",0,40,WHITE)
 
@@ -230,10 +230,10 @@ font = pygame.font.Font(None, 36)
 bigFont = pygame.font.Font(None, 100)
 size = [SCREEN_WIDTH, SCREEN_HEIGHT]
 screen = pygame.display.set_mode(size)
-done=False
+done = False
 
 while not done:
     load = opening()
-    game = BotboyGame()
-    done=game.main()
+    game = BotboyGame(load)
+    done = game.main()
 pygame.quit()
