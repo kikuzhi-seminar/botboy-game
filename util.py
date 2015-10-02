@@ -13,3 +13,10 @@ CBROWN = (79, 57, 47)
 
 SCREEN_WIDTH = 800
 SCREEN_HEIGHT = 600
+
+def renderText(screen,font,text,text_x,text_y,color):
+    message = font.render(text, True, color)
+    message_rect = message.get_rect()
+    x = screen.get_width() / 2 - message_rect.width / 2
+    y = screen.get_height() / 2 - message_rect.height / 2
+    screen.blit(message, [x + text_x, y + text_y])
