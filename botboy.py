@@ -55,6 +55,9 @@ class BotboyGame:
         self.gameover = False
         self.life = 5
         self.clock = pygame.time.Clock()
+        self.timeL = 10000
+        self.time0 = pygame.time.get_ticks()
+        self.timeover = False
 
     # メインループ
     def main(self):
@@ -83,25 +86,33 @@ class BotboyGame:
                     self.update()
                     self.drow()
                 else:
-                     screen.fill(BLACK)
-                     for event in pygame.event.get():
-                         if event.type == pygame.QUIT:
+                    screen.fill(BLACK)
+                    for event in pygame.event.get():
+                        if event.type == pygame.QUIT:
                              return True
-                         elif event.type == pygame.KEYDOWN and event.key == pygame.K_RETURN:
+                        elif event.type == pygame.KEYDOWN and event.key == pygame.K_RETURN:
                              self.life -= 1
+                             self.time0 = pygame.time.get_ticks()
+                             self.timeover = False
                              self.died = False
                              self.load()
-
-                     self.text = font.render("YOU DIED", True, RED)
-                     self.text_rect = self.text.get_rect()
-                     self.text_x = screen.get_width() / 2 - self.text_rect.width / 2
-                     self.text_y = screen.get_height() / 2 - self.text_rect.height / 2
-                     screen.blit(self.text, [self.text_x, self.text_y])
-                     self.text = font.render("Press Enter to Continue!", True, WHITE)
-                     self.text_rect = self.text.get_rect()
-                     self.text_x = screen.get_width() / 2 - self.text_rect.width / 2
-                     self.text_y = screen.get_height() / 2 - self.text_rect.height / 2 + 50
-                     screen.blit(self.text, [self.text_x, self.text_y])
+                    if self.timeover == True:
+                         self.text = font.render("TIME OVER", True, RED)
+                         self.text_rect = self.text.get_rect()
+                         self.text_x = screen.get_width() / 2 - self.text_rect.width / 2
+                         self.text_y = screen.get_height() / 2 - self.text_rect.height / 2
+                         screen.blit(self.text, [self.text_x, self.text_y])
+                    else:
+                         self.text = font.render("YOU DIED", True, RED)
+                         self.text_rect = self.text.get_rect()
+                         self.text_x = screen.get_width() / 2 - self.text_rect.width / 2
+                         self.text_y = screen.get_height() / 2 - self.text_rect.height / 2
+                         screen.blit(self.text, [self.text_x, self.text_y])
+                    self.text = font.render("Press Enter to Continue!", True, WHITE)
+                    self.text_rect = self.text.get_rect()
+                    self.text_x = screen.get_width() / 2 - self.text_rect.width / 2
+                    self.text_y = screen.get_height() / 2 - self.text_rect.height / 2 + 50
+                    screen.blit(self.text, [self.text_x, self.text_y])
 
             else:
                  screen.fill(BLACK)
@@ -130,9 +141,13 @@ class BotboyGame:
     def choseChar(self):
         self.player = Botboy(self)
 
+    def timer(self):
+        self.time = pygame.time.get_ticks()
+
     def update(self):
         self.active_sprite_list.update()
         self.current_stage.update()
+        self.time = pygame.time.get_ticks()
         if self.player.rect.right >= 500:
             diff = self.player.rect.right - 500
             self.player.rect.right = 500
@@ -142,6 +157,10 @@ class BotboyGame:
             self.player.rect.left = 120
             self.current_stage.shift_world(diff)
         if self.player.rect.y >= SCREEN_HEIGHT + self.player.rect.height and self.player.change_y >= 0:
+            self.died=True
+            self.death()
+        if self.timeL - (self.time - self.time0) <= 0:
+            self.timeover = True
             self.died=True
             self.death()
         if self.life == 0:
@@ -156,17 +175,21 @@ class BotboyGame:
     def drow(self):
         self.current_stage.draw(screen)
         self.active_sprite_list.draw(screen)
-        self.text = font.render("Total Life    : " + str(self.life), True, BLACK)
+        self.text = font.render("Total Life     :        " + str(self.life), True, BLACK)
         self.text_rect = self.text.get_rect()
         self.text_x = screen.get_width() - self.text_rect.width * 1.2
         self.text_y = 20
         screen.blit(self.text, [self.text_x, self.text_y])
 
-        self.text =font.render("Total Credit: " + str(self.score), True, BLACK)
+        self.text =font.render("Total Credit :        " + str(self.score), True, BLACK)
         self.text_rect = self.text.get_rect()
         self.text_x = screen.get_width() - self.text_rect.width * 1.2
         self.text_y = 50
         screen.blit(self.text, [self.text_x, self.text_y])
+
+        renderText(screen,font,"Time Limit    :",210,-210,BLACK)
+        renderText(screen,font,str(self.timeL - (self.time - self.time0)),330,-210,BLACK)
+
 
     def save(self):
         stage = self.current_stage
