@@ -36,7 +36,7 @@ class SavePoint(StageObject):
         self.rect.center = (x_pos + 15,y_pos +15)
 
     def action(self):
-        stage = self.game.current_stage
+        stage = self.game.stage
         playerY = self.game.player.rect.y
         playerX = self.game.player.rect.x
         self.game.currentSavePoint = [stage.stageId,stage.world_shift, playerX, playerY]

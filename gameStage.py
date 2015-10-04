@@ -1,6 +1,7 @@
 import pygame
 from util import *
 from gameStageObject import *
+from gameEnemy import *
 
 class Stage():
     def __init__(self, game, player, stageOpt):
@@ -66,15 +67,18 @@ class Stage():
                     block = Block( j * self.BLOCKSIZE, SCREEN_HEIGHT - i * self.BLOCKSIZE )
                     block.player = player
                     self.stage_block_list.add( block )
+                if map[i][j] == 'b':
+                    boss = Boss( j * self.BLOCKSIZE, SCREEN_HEIGHT - i * self.BLOCKSIZE , 50, "python")
+                    self.enemy_list.add( boss )
                 elif map[i][j] == 'c':
                     coin = Coin( j * self.BLOCKSIZE, SCREEN_HEIGHT - i * self.BLOCKSIZE, self.game)
                     self.item_list.add( coin )
                 elif map[i][j] == 's':
                     savePoint = SavePoint( j * self.BLOCKSIZE, SCREEN_HEIGHT - i * self.BLOCKSIZE, self.game)
                     self.item_list.add( savePoint )
-                elif map[i][j] == 'm':
-                    mob = Mob( j * self.BLOCKSIZE, SCREEN_HEIGHT - i * self.BLOCKSIZE, 30, 30)
-                    self.enemy_list.add( mob )
+                # elif map[i][j] == 'm':
+                #     enemy = Enemy( j * self.BLOCKSIZE, SCREEN_HEIGHT - i * self.BLOCKSIZE, 30, 30)
+                #     self.enemy_list.add( enemy )
                 elif map[i][j] == 'D':
                     door = Door( j * self.BLOCKSIZE, SCREEN_HEIGHT - i * self.BLOCKSIZE, self.game, opt[ optNun ] )
                     self.door_list.add( door )

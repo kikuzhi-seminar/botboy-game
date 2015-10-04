@@ -4,7 +4,7 @@ import pygame.font
 import sys
 from util import *
 from gamePlayer import *
-from gameMob import *
+from gameEnemy import *
 from gameStage import *
 
 
@@ -15,13 +15,13 @@ class BotboyGame:
         self.choseChar()
 
         # ステージ作成
-        self.current_stage = Stage(self, self.player, ["01"])
-        self.stageDict = {"01":self.current_stage}
+        self.stage = Stage(self, self.player, ["01"])
+        self.stageDict = {"01":self.stage}
 
         # クラス内のオブジェクトをリンクさせている。
         self.active_sprite_list = pygame.sprite.Group()
-        self.player.stage = self.current_stage
-        self.player.rect.x = 340
+        self.player.stage = self.stage
+        self.player.rect.x = 120
         self.player.rect.y = SCREEN_HEIGHT - self.player.rect.height
         self.active_sprite_list.add(self.player)
 
@@ -35,16 +35,16 @@ class BotboyGame:
                 self.score = eval(saveFile.readline().rstrip("\n"))
                 saveData = eval(saveFile.readline().rstrip("\n"))
                 if saveData[0] in self.stageDict:
-                    self.current_stage = self.stageDict[saveData[0]]
+                    self.stage = self.stageDict[saveData[0]]
                 else:
-                    self.current_stage = Stage(self, self, [saveData[0],[saveData[3],saveData[1]]])
-                    self.stageDict[saveData[0]] = self.current_stage
-                self.player.stage = self.current_stage
+                    self.stage = Stage(self, self, [saveData[0], [saveData[3], saveData[1]]])
+                    self.stageDict[saveData[0]] = self.stage
+                self.player.stage = self.stage
                 try: # プレーヤーのy変更
                     self.player.rect.y = saveData[3]
                 except: pass
                 try: # world_shiftの変更
-                    self.current_stage.shift_world(saveData[1])
+                    self.stage.shift_world(saveData[1])
                 except: pass
                 self.currentSavePoint = eval(saveFile.readline().rstrip("\n"))
                 self.currentDeathPoint = eval(saveFile.readline().rstrip("\n"))
@@ -131,30 +131,70 @@ class BotboyGame:
         self.player = Botboy(self)
 
     def update(self):
-        self.active_sprite_list.update()
-        self.current_stage.update()
+        block_hit_list = pygame.sprite.spritecollide(self.player, self.stage.stage_block_list, False)
+        for block in block_hit_list:
+            if self.player.change_x > 0:
+                self.player.rect.right = block.rect.left
+            elif self.player.change_x < 0:
+                self.player.rect.left = block.rect.right
+        self.player.rect.y += self.player.change_y
+        block_hit_list = pygame.sprite.spritecollide(self.player, self.stage.stage_block_list, False)
+        for block in block_hit_list:
+            if self.player.change_y > 0:
+                self.player.rect.bottom = block.rect.top
+            elif self.player.change_y < 0:
+                self.player.rect.top = block.rect.bottom
+            self.player.change_y = 0
+
+        # アイテムの実装
+        item_hit_list = pygame.sprite.spritecollide(self.player, self.stage.item_list, True)
+        for item in item_hit_list:
+            item.action()
+
+        # 敵との判定の実装
+        enemy_hit_list = pygame.sprite.spritecollide(self.player, self.stage.enemy_list, False)
+        for enemy in enemy_hit_list:
+            if enemy.rect.y >= self.player.rect.y + self.player.rect.height - self.player.change_y:
+                enemy.kill()
+            else:
+                self.player.died()
+
+        # Doorオブジェクトのワープの実装
+        door_hit_list = pygame.sprite.spritecollide(self.player, self.stage.door_list, False)
+        if len(door_hit_list) > 0 and door_hit_list[0].check():
+            hit_door = door_hit_list[0]
+            self.player.rect.x = 120
+            self.stage.shift_world(-1 * self.stage.world_shift)
+            # self.stage.world_shift = 0
+            if hit_door.stageId in self.stageDict:
+                self.stage = self.stageDict[hit_door.stageId]
+            else:
+                self.stage = Stage(self, self.player, [hit_door.stageId, hit_door.pos])
+                self.stageDict[ hit_door.stageId ]  = self.stage
+            try: # プレーヤーのy変更
+                self.player.rect.y = hit_door.pos[0]
+            except: pass
+            try: # world_shiftの変更
+                self.stage.shift_world(hit_door.pos[1])
+            except: pass
+
+        self.active_sprite_list.update() #player
+        self.stage.update()
         if self.player.rect.right >= 500:
             diff = self.player.rect.right - 500
             self.player.rect.right = 500
-            self.current_stage.shift_world(-diff)
+            self.stage.shift_world(-diff)
         if self.player.rect.left <= 120:
             diff = 120 - self.player.rect.left
             self.player.rect.left = 120
-            self.current_stage.shift_world(diff)
+            self.stage.shift_world(diff)
         if self.player.rect.y >= SCREEN_HEIGHT + self.player.rect.height and self.player.change_y >= 0:
-            self.died=True
-            self.death()
+            self.player.died()
         if self.life == 0:
-            self.gameover = True
-
-    def death(self):
-        stage = self.current_stage
-        playerY = self.player.rect.y
-        playerX = self.player.rect.x
-        self.currentDeathPoint = [stage.stageId,stage.world_shift, playerX, playerY]
+            self.gameOver()
 
     def drow(self):
-        self.current_stage.draw(screen)
+        self.stage.draw(screen)
         self.active_sprite_list.draw(screen)
         self.text = font.render("Total Life    : " + str(self.life), True, BLACK)
         self.text_rect = self.text.get_rect()
@@ -168,8 +208,16 @@ class BotboyGame:
         self.text_y = 50
         screen.blit(self.text, [self.text_x, self.text_y])
 
+        # デバッグ用コード
+        if DEBUG:
+            renderText(screen, font, "whorldShift " + str(self.stage.world_shift) , 0, 70, BLACK)
+            renderText(screen, font, "savePoint " + str(self.currentSavePoint) , 0, 40, BLACK)
+            renderText(screen, font, "deathPoint " + str(self.currentDeathPoint) , 0, 10, BLACK)
+            renderText(screen, font, "player " + str(self.player.rect.x) + "," + str(self.player.rect.y) , 0, -10, BLACK)
+
+
     def save(self):
-        stage = self.current_stage
+        stage = self.stage
         playerY = self.player.rect.y
         playerX = self.player.rect.x
         savePoint = [stage.stageId,stage.world_shift, playerX, playerY]
@@ -186,40 +234,39 @@ class BotboyGame:
     def gameOver(self):
         self.gameover = True
 
-    def Died(self):
-        self.died = True
-        self.player.stop()
-
-
     def load(self):
-        data = self.currentSavePoint
-        if data is not None:
-            self.current_stage = self.stageDict[data[0]]
-            self.current_stage.shift_world( -1 * self.currentDeathPoint[1] )
-            self.current_stage.world_shift = 0
-            self.current_stage.shift_world(data[1])
-            self.player.rect.x = data[2]
-            self.player.rect.y = data[3]
-        else: # sevePointを通過しなかったとき
-            pass
+        self.stage.shift_world(-1 * self.currentDeathPoint[2])
+        self.stage.world_shift = 0
+        self.stage = self.stageDict[self.currentSavePoint[0]]
+        self.stage.shift_world(self.currentSavePoint[1])
+        self.stage.world_shift = self.currentSavePoint[1]
+        # data = self.currentSavePoint
+        # if data is not None:
+        #     self.stage = self.stageDict[data[0]]
+        #     self.stage.shift_world( -1 * data[1] )
+        #     # self.stage.world_shift = 0
+        #     self.stage.shift_world(data[1])
+        #     self.player.rect.x = data[2]
+        #     self.player.rect.y = data[3]
+        # else: # sevePointを通過しなかったとき
+        #     pass
 
-def opening():
-    done = False
+def opening(done):
     screen.fill(BLACK)
-    renderText(screen,bigFont,"Bot-Boy",0, -50,WHITE)
-    renderText(screen,font,"Load game > LEFT KEY ",0,70,WHITE)
-    renderText(screen,font,"New game > RIGHT KEY",0,40,WHITE)
+    renderText(screen, bigFont, "Bot-Boy", 0, -50, WHITE)
+    renderText(screen, font, "Load game > LEFT KEY ", 0, 70, WHITE)
+    renderText(screen, font, "New game > RIGHT KEY", 0, 40, WHITE)
 
     pygame.display.flip()
 
     while not done:
          for event in pygame.event.get():
              if event.type == pygame.QUIT:
-                done = True
+                return False, True
              elif event.type == pygame.KEYDOWN and event.key == pygame.K_LEFT:
-                return True
+                return True, False
              elif event.type == pygame.KEYDOWN and event.key == pygame.K_RIGHT:
-                return False
+                return False, False
 
          pygame.display.flip()
 
@@ -231,9 +278,12 @@ bigFont = pygame.font.Font(None, 100)
 size = [SCREEN_WIDTH, SCREEN_HEIGHT]
 screen = pygame.display.set_mode(size)
 done = False
+DEBUG = True
 
 while not done:
-    load = opening()
+    load, done = opening(done)
+    if done == True: break
     game = BotboyGame(load)
     done = game.main()
+
 pygame.quit()
