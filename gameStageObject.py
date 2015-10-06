@@ -2,16 +2,25 @@ import pygame
 from util import *
 
 class StageObject(pygame.sprite.Sprite):
-    def __init__(self, width, height):
+    def __init__(self):
         super().__init__()
-        self.image = pygame.Surface([width, height])
+        self.makeModel()
+
+    def makeModel(self):
+        self.image = pygame.Surface([30, 30])
         self.image.fill(GREEN)
         self.rect = self.image.get_rect()
 
 class Coin(StageObject):
     def __init__(self, x_pos ,y_pos, game):
-        pygame.sprite.Sprite.__init__(self)
+        # pygame.sprite.Sprite.__init__(self)
         self.game = game
+        self.x_pos = x_pos
+        self.y_pos = y_pos
+        super().__init__()
+
+
+    def makeModel(self):
         self.image = pygame.Surface([20,20])
         self.image.fill(WHITE)
         pygame.draw.circle(self.image, CBROWN, (10, 10), 10, 0)
@@ -19,21 +28,15 @@ class Coin(StageObject):
         pygame.draw.rect(self.image, GRAY, (9,4,2,12), 0)
         self.image.set_colorkey(self.image.get_at((0,0)), pygame.RLEACCEL)
         self.rect = self.image.get_rect()
-        self.rect.center = (x_pos + 15,y_pos +15)
+        self.rect.center = (self.x_pos + 15, self.y_pos +15)
 
     def action(self):
         self.game.score += 1
 
-class SavePoint(StageObject):
-    def __init__(self, x_pos, y_pos, game):
-        pygame.sprite.Sprite.__init__(self)
-        self.game = game
-        self.image = pygame.Surface([20,20])
-        self.image.fill(WHITE)
+class SavePoint(Coin):
+    def makeModel(self):
+        super().makeModel()
         pygame.draw.circle(self.image, BLUE, (10, 10), 10, 0)
-        self.image.set_colorkey(self.image.get_at((0,0)), pygame.RLEACCEL)
-        self.rect = self.image.get_rect()
-        self.rect.center = (x_pos + 15,y_pos +15)
 
     def action(self):
         stage = self.game.stage
@@ -42,8 +45,12 @@ class SavePoint(StageObject):
         self.game.currentSavePoint = [stage.stageId,stage.world_shift, playerX, playerY]
 
 class Block(StageObject):
-    def __init__(self,x_pos,y_pos):
-        pygame.sprite.Sprite.__init__(self)
+    def __init__(self, x_pos ,y_pos):
+        self.x_pos = x_pos
+        self.y_pos = y_pos
+        super().__init__()
+
+    def makeModel(self):
         self.image = pygame.Surface([30,30])
         self.image.fill(WHITE)
         pygame.draw.rect(self.image, DBROWN, (0,0,30,30), 0)
@@ -55,29 +62,34 @@ class Block(StageObject):
         pygame.draw.circle(self.image, DBROWN, (8, 25), 5, 0)
         pygame.draw.rect(self.image, GREEN, (0,0,30,5), 0)
         self.rect = self.image.get_rect()
-        self.rect.x = x_pos
-        self.rect.y = y_pos
+        self.rect.x = self.x_pos
+        self.rect.y = self.y_pos
 
 class Door(StageObject):
-    # doorOpt (stageId, condition = "on",pos[playerY,world_shift] )
-    def __init__(self, x_pos, y_pos, game, doorOpt):
-        pygame.sprite.Sprite.__init__(self)
+    # opt (stageId, condition = "on",pos[playerY,world_shift] )
+    def __init__(self, x_pos, y_pos, game, opt):
         self.game = game
+        self.x_pos = x_pos
+        self.y_pos = y_pos
+        self.opt = opt
+        super().__init__()
+
+    def makeModel(self):
         self.image = pygame.Surface([30,30])
         self.image.fill(WHITE)
         pygame.draw.rect(self.image, CBROWN, (0,0,30,30), 0)
         pygame.draw.rect(self.image, WBROWN, (3,3,10,24), 0)
         pygame.draw.rect(self.image, WBROWN, (17,3,10,24), 0)
         self.rect = self.image.get_rect()
-        self.rect.x = x_pos
-        self.rect.y = y_pos
-        self.stageId = doorOpt[0]
+        self.rect.x = self.x_pos
+        self.rect.y = self.y_pos
+        self.stageId = self.opt[0]
         try:
-            self.condition = doorOpt[1]
+            self.condition = self.opt[1]
         except:
             self.condition = "on"
         try:
-            self.pos = [int(x) for x in doorOpt[2].split("/")]
+            self.pos = [int(x) for x in self.opt[2].split("/")]
         except:
             self.pos = []
 
@@ -90,3 +102,23 @@ class Door(StageObject):
                 return True
             else:
                 return False
+
+class Bullet(StageObject):
+    def __init__(self,whose, x_pos, y_pos):
+        self.x_pos = x_pos
+        self.y_pos = y_pos
+        self.whose = whose
+        super().__init__()
+
+    def makeModel(self):
+        self.image = pygame.Surface([20,20])
+        self.image.fill(WHITE)
+        pygame.draw.circle(self.image, BLACK, (10, 10), 10, 0)
+        pygame.draw.circle(self.image, GRAY, (10, 10), 9, 0)
+        pygame.draw.rect(self.image, GRAY, (9,4,2,12), 0)
+        self.image.set_colorkey(self.image.get_at((0,0)), pygame.RLEACCEL)
+        self.rect = self.image.get_rect()
+        self.rect.center = (self.x_pos + 15, self.y_pos +15)
+
+    def action(self):
+        self.rect.x -= 2

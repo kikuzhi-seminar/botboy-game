@@ -75,6 +75,9 @@ class BotboyGame:
                                 self.player.jump()
                             if event.key == pygame.K_s: #セーブ
                                 self.save()
+                            if event.key == pygame.K_SPACE:
+                                bullet = Bullet(True, self.player.rect.x, self.player.rect.y)
+                                self.stage.item_list.add(bullet)
                         if event.type == pygame.KEYUP:
                             if event.key == pygame.K_LEFT and self.player.change_x < 0:
                                 self.player.stop()
@@ -235,21 +238,14 @@ class BotboyGame:
         self.gameover = True
 
     def load(self):
-        self.stage.shift_world(-1 * self.currentDeathPoint[2])
-        self.stage.world_shift = 0
-        self.stage = self.stageDict[self.currentSavePoint[0]]
-        self.stage.shift_world(self.currentSavePoint[1])
-        self.stage.world_shift = self.currentSavePoint[1]
-        # data = self.currentSavePoint
-        # if data is not None:
-        #     self.stage = self.stageDict[data[0]]
-        #     self.stage.shift_world( -1 * data[1] )
-        #     # self.stage.world_shift = 0
-        #     self.stage.shift_world(data[1])
-        #     self.player.rect.x = data[2]
-        #     self.player.rect.y = data[3]
-        # else: # sevePointを通過しなかったとき
-        #     pass
+        data = self.currentSavePoint
+        if data is not None:
+            self.stage = self.stageDict[data[0]]
+            self.stage.shift_world(data[1])
+            self.player.rect.x = data[2]
+            self.player.rect.y = data[3]
+        else: # sevePointを通過しなかったとき
+            pass
 
 def opening(done):
     screen.fill(BLACK)
