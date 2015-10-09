@@ -50,14 +50,17 @@ class Player(pygame.sprite.Sprite):
         self.died()
 
     def died(self):
-        self.game.died = True
-        self.stop()
-        stage = self.game.stage
-        playerY = self.rect.y
-        playerX = self.rect.x
-        self.game.currentDeathPoint = [stage.stageId, stage.world_shift, playerX, playerY]
-        stage.shift_world( -1 * self.game.currentDeathPoint[1] )
-        stage.world_shift = 0
+        if self.game.finish == True:
+            self.game.gameover = True
+        else:
+            self.game.died = True
+            self.stop()
+            stage = self.game.stage
+            playerY = self.rect.y
+            playerX = self.rect.x
+            self.game.currentDeathPoint = [stage.stageId, stage.world_shift, playerX, playerY]
+            stage.shift_world( -1 * self.game.currentDeathPoint[1] )
+            stage.world_shift = 0
 
 class Botboy(Player):
     def __init__(self,game):

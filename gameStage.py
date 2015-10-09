@@ -68,7 +68,7 @@ class Stage():
             for j in range(self.col):
                 if map[i][j] == 'B':
                     block = Block( j * self.BLOCKSIZE, SCREEN_HEIGHT - i * self.BLOCKSIZE )
-                    block.player = player
+                    # block.player = player
                     self.stage_block_list.add( block )
                 elif map[i][j] == 'c':
                     coin = Coin( j * self.BLOCKSIZE, SCREEN_HEIGHT - i * self.BLOCKSIZE, self.game)

@@ -55,6 +55,8 @@ class Boss(Enemy):
 
         if self.hp <= 0:
             self.kill()
+            self.game.finish = True
+            self.game.player.died()
 
     def jump(self):
         platform_hit_list = pygame.sprite.spritecollide(self, self.game.stage.stage_block_list, False)

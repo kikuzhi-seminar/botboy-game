@@ -53,6 +53,7 @@ class BotboyGame:
         self.done = False
         self.died = False
         self.gameover = False
+        self.finish = False
         self.life = 5
         self.clock = pygame.time.Clock()
 
@@ -60,6 +61,7 @@ class BotboyGame:
     def main(self):
         while not self.done:
             self.k_up = False
+            self.player.stage = self.stage
             if not self.gameover:
                 if not self.died:
                     for event in pygame.event.get():
@@ -116,7 +118,7 @@ class BotboyGame:
                          self.gameover = False
                          self.done=True
 
-                 self.text = font.render("GAME OVER", True, RED)
+                 self.text = font.render( "GAME OVER", True, RED) if not self.finish else bigFont.render("Congratulation!!", True, LBLUE)
                  self.text_rect = self.text.get_rect()
                  self.text_x = screen.get_width() / 2 - self.text_rect.width / 2
                  self.text_y = screen.get_height() / 2 - self.text_rect.height / 2

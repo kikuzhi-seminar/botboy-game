@@ -35,8 +35,11 @@ class Coin(StageObject):
 
 class SavePoint(Coin):
     def makeModel(self):
-        super().makeModel()
-        pygame.draw.circle(self.image, BLUE, (10, 10), 10, 0)
+        self.image = pygame.Surface([20,20])
+        self.image.fill(WHITE)
+        self.image.set_colorkey(self.image.get_at((0,0)), pygame.RLEACCEL)
+        self.rect = self.image.get_rect()
+        self.rect.center = (self.x_pos + 15, self.y_pos +15)
 
     def action(self):
         stage = self.game.stage
