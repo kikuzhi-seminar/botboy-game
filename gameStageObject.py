@@ -104,21 +104,36 @@ class Door(StageObject):
                 return False
 
 class Bullet(StageObject):
-    def __init__(self,whose, x_pos, y_pos):
-        self.x_pos = x_pos
-        self.y_pos = y_pos
+    def __init__(self,whose):
         self.whose = whose
+        if not self.whose.isEnemy:
+            self.enemys = self.whose.game.stage.enemy_list
+        else:
+            self.enemys = self.whose.game.active_sprite_list
+        self.whose.game.score -= 1
+        self.velocity = 10 if self.whose.isRight == True else -10
         super().__init__()
 
     def makeModel(self):
         self.image = pygame.Surface([20,20])
         self.image.fill(WHITE)
-        pygame.draw.circle(self.image, BLACK, (10, 10), 10, 0)
-        pygame.draw.circle(self.image, GRAY, (10, 10), 9, 0)
-        pygame.draw.rect(self.image, GRAY, (9,4,2,12), 0)
+        pygame.draw.circle(self.image, RED, (10, 10), 5, 0)
         self.image.set_colorkey(self.image.get_at((0,0)), pygame.RLEACCEL)
         self.rect = self.image.get_rect()
-        self.rect.center = (self.x_pos + 15, self.y_pos +15)
+        x_pos = self.whose.rect.x + self.whose.rect.width + 10 if self.whose.isRight else self.whose.rect.x - 10
+        y_pos = self.whose.rect.y + ( self.whose.rect.height / 2 ) + 10
+        self.rect.center = (x_pos, y_pos)
 
     def action(self):
-        self.rect.x -= 2
+        self.whose.getBullet()
+
+    def update(self):
+        bullet_hit_list = pygame.sprite.spritecollide(self, self.enemys, False)
+        for enemy in bullet_hit_list:
+            enemy.getBullet()
+            self.kill()
+            break
+
+        self.rect.x += self.velocity
+        if self.rect.right <= 0 or self.rect.x >= SCREEN_WIDTH:
+            self.kill()

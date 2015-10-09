@@ -11,6 +11,7 @@ class Stage():
         self.enemy_list = pygame.sprite.Group()
         self.door_list = pygame.sprite.Group()
         self.item_list = pygame.sprite.Group()
+        self.bullet_list = pygame.sprite.Group()
         self.player = player
         self.break_points = None
         self.BLOCKSIZE = 30
@@ -22,6 +23,7 @@ class Stage():
         self.enemy_list.update()
         self.item_list.update()
         self.door_list.update()
+        self.bullet_list.update()
 
 
     def draw(self, screen):
@@ -30,6 +32,7 @@ class Stage():
         self.enemy_list.draw(screen)
         self.item_list.draw(screen)
         self.door_list.draw(screen)
+        self.bullet_list.draw(screen)
 
     def shift_world(self, shift_x):
         self.world_shift += shift_x
@@ -67,19 +70,20 @@ class Stage():
                     block = Block( j * self.BLOCKSIZE, SCREEN_HEIGHT - i * self.BLOCKSIZE )
                     block.player = player
                     self.stage_block_list.add( block )
-                if map[i][j] == 'b':
-                    boss = Boss( j * self.BLOCKSIZE, SCREEN_HEIGHT - i * self.BLOCKSIZE , 50, "python")
-                    self.enemy_list.add( boss )
                 elif map[i][j] == 'c':
                     coin = Coin( j * self.BLOCKSIZE, SCREEN_HEIGHT - i * self.BLOCKSIZE, self.game)
                     self.item_list.add( coin )
                 elif map[i][j] == 's':
                     savePoint = SavePoint( j * self.BLOCKSIZE, SCREEN_HEIGHT - i * self.BLOCKSIZE, self.game)
                     self.item_list.add( savePoint )
-                # elif map[i][j] == 'm':
-                #     enemy = Enemy( j * self.BLOCKSIZE, SCREEN_HEIGHT - i * self.BLOCKSIZE, 30, 30)
-                #     self.enemy_list.add( enemy )
+                elif map[i][j] == 'm':
+                    enemy = Enemy( j * self.BLOCKSIZE, SCREEN_HEIGHT - i * self.BLOCKSIZE)
+                    self.enemy_list.add( enemy )
                 elif map[i][j] == 'D':
                     door = Door( j * self.BLOCKSIZE, SCREEN_HEIGHT - i * self.BLOCKSIZE, self.game, opt[ optNun ] )
                     self.door_list.add( door )
+                    optNun += 1
+                elif map[i][j] == 'b':
+                    boss = Boss(game, eval(opt[optNun][ 0 ]), eval(opt[optNun][ 1 ]), eval(opt[optNun][ 2 ]), opt[optNun][ 3 ])
+                    self.enemy_list.add( boss )
                     optNun += 1

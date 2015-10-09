@@ -15,6 +15,7 @@ class Player(pygame.sprite.Sprite):
         self.change_y = 0
         self.stage = None
         self.score = 0
+        self.isEnemy = False
 
     def update(self):
         self.calc_grav()
@@ -45,6 +46,9 @@ class Player(pygame.sprite.Sprite):
     def stop(self):
         self.change_x = 0
 
+    def getBullet(self):
+        self.died()
+
     def died(self):
         self.game.died = True
         self.stop()
@@ -60,18 +64,22 @@ class Botboy(Player):
         pygame.sprite.Sprite.__init__(self)
         self.game = game
         self.left_botboy_image = pygame.image.load("data/botboy.png")
-        self.left_botboy_image.set_colorkey(-1,pygame.RLEACCEL)
-        self.right_botboy_image = pygame.transform.flip(self.left_botboy_image,True,False)
+        self.left_botboy_image.set_colorkey(-1, pygame.RLEACCEL)
+        self.right_botboy_image = pygame.transform.flip(self.left_botboy_image, True, False)
         self.image = self.right_botboy_image
         self.rect = self.image.get_rect()
         self.change_x = 0
         self.change_y = 0
         self.stage = None
+        self.isRight = True
+        self.isEnemy = False
 
     def go_left(self):
         super().go_left()
         self.image = self.left_botboy_image
+        self.isRight = False
 
     def go_right(self):
         super().go_right()
         self.image = self.right_botboy_image
+        self.isRight = True

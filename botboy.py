@@ -75,9 +75,9 @@ class BotboyGame:
                                 self.player.jump()
                             if event.key == pygame.K_s: #セーブ
                                 self.save()
-                            if event.key == pygame.K_SPACE:
-                                bullet = Bullet(True, self.player.rect.x, self.player.rect.y)
-                                self.stage.item_list.add(bullet)
+                            if event.key == pygame.K_SPACE and self.score > 0:
+                                bullet = Bullet(self.player) # self.player.rect.y
+                                self.stage.bullet_list.add(bullet)
                         if event.type == pygame.KEYUP:
                             if event.key == pygame.K_LEFT and self.player.change_x < 0:
                                 self.player.stop()
