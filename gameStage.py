@@ -16,6 +16,7 @@ class Stage():
         self.break_points = None
         self.BLOCKSIZE = 30
         self.stageId = stageOpt[0]
+        self.startTime = pygame.time.get_ticks()
         self.stageBuilder(self.game, self.player, stageOpt)
 
     def update(self):
@@ -49,6 +50,7 @@ class Stage():
         optNun = 0
         opt = []
         with open("data/stage_" + stageOpt[0] + ".pyopt", "r") as file:
+            self.timeL = eval(file.readline().rstrip())
             for line in file:
                 line = line.rstrip()
                 opt.append(line.split(","))

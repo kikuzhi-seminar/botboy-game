@@ -6,10 +6,19 @@ from util import *
 from gamePlayer import *
 from gameEnemy import *
 from gameStage import *
+from time import strftime
 
 
 class BotboyGame:
     def __init__(self, loadData = False):
+
+        # ゲームの用意
+        self.done = False
+        self.died = False
+        self.gameover = False
+        self.finish = False
+        self.life = 5
+        self.clock = pygame.time.Clock()
 
         # ゲームキャラクター
         self.choseChar()
@@ -48,14 +57,6 @@ class BotboyGame:
                 except: pass
                 self.currentSavePoint = eval(saveFile.readline().rstrip("\n"))
                 self.currentDeathPoint = eval(saveFile.readline().rstrip("\n"))
-
-        # ゲームの用意
-        self.done = False
-        self.died = False
-        self.gameover = False
-        self.finish = False
-        self.life = 5
-        self.clock = pygame.time.Clock()
 
     # メインループ
     def main(self):
@@ -197,6 +198,8 @@ class BotboyGame:
             self.player.died()
         if self.life == 0:
             self.gameOver()
+        if pygame.time.get_ticks() - self.stage.startTime > self.stage.timeL:
+            self.gameOver()
 
     def drow(self):
         self.stage.draw(screen)
@@ -212,6 +215,9 @@ class BotboyGame:
         self.text_x = screen.get_width() - self.text_rect.width * 1.2
         self.text_y = 50
         screen.blit(self.text, [self.text_x, self.text_y])
+
+        # renderText(screen, font, "TIME " + strftime("%M:%S", self.stage.timeL - pygame.time.get_ticks() - self.stage.startTime ) , 0, -200, BLACK)
+
 
         # デバッグ用コード
         if DEBUG:
